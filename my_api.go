@@ -34,7 +34,6 @@ type Page struct {
 // }
 
 func main() {
-	// os.Remove("TestPage.txt")
 	os.Remove("sqlite-database.db")
 
 	file, err := os.Create("sqlite-database.db")
@@ -53,11 +52,6 @@ func main() {
 
 	getPages(mydb)
 
-	// p1 := &Page{Title: "TestPage", Body: []byte("This is sample page content.")}
-	// p1.save()
-	// p2, _ := loadPage("TestPage")
-	// fmt.Println(string(p2.Body))
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", root_handler)
 
@@ -69,7 +63,7 @@ func root_handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initializeDB(db *sql.DB) {
-	initPageSQL := `CREATE TABLE IF NOT EXISTS page (
+	initPageSQL := `CREATE TABLE IF NOT EXISTS pages (
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		title TEXT,
 		body BLOB,
@@ -84,7 +78,7 @@ func initializeDB(db *sql.DB) {
 }
 
 func insertPage(db *sql.DB, title string, body []byte) {
-	insertPageSQL := `INSERT INTO page(title, body, created_at, updated_at) VALUES(?, ?, ?, ?)`
+	insertPageSQL := `INSERT INTO pages(title, body, created_at, updated_at) VALUES(?, ?, ?, ?);`
 	statement, err := db.Prepare(insertPageSQL)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -95,7 +89,7 @@ func insertPage(db *sql.DB, title string, body []byte) {
 }
 
 func getPages(db *sql.DB) {
-	rows, err := db.Query(`SELECT * FROM page`)
+	rows, err := db.Query(`SELECT * FROM pages`)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -108,6 +102,6 @@ func getPages(db *sql.DB) {
 	}
 	
 	for _, myrow := range pages {
-		fmt.Println(string(myrow.Body))
+		fmt.Printf("%s: %s\n", myrow.Title, string(myrow.Body))
 	}
 }
