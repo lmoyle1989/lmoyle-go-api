@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"log"
 	"database/sql"
+	"fmt"
+	"log"
+	"os"
 	// "html/template"
 	"net/http"
 	"time"
-	_ "github.com/mattn/go-sqlite3" 
+	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Page struct {
-	Id int
+	Id []byte
 	Title string
 	Body []byte
 	CreatedAt string
@@ -50,11 +51,11 @@ func root_handler(w http.ResponseWriter, r *http.Request) {
 
 func initializeDB(db *sql.DB) {
 	initPageSQL := `CREATE TABLE IF NOT EXISTS pages (
-		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		title TEXT,
-		body BLOB,
-		created_at TEXT,
-		updated_at TEXT
+		id BLOB NOT NULL PRIMARY KEY,
+		title TEXT NOT NULL,
+		body BLOB NOT NULL,
+		created_at TEXT NOT NULL,
+		updated_at TEXT NOT NULL
 	);`
 	statement, err := db.Prepare(initPageSQL)
 	if err != nil {
@@ -64,15 +65,24 @@ func initializeDB(db *sql.DB) {
 }
 
 func insertPage(db *sql.DB, title string, body []byte) {
-	insertPageSQL := `INSERT INTO pages(title, body, created_at, updated_at) VALUES(?, ?, ?, ?);`
+	insertPageSQL := `INSERT INTO pages(id, title, body, created_at, updated_at) VALUES(?, ?, ?, ?, ?);`
 	statement, err := db.Prepare(insertPageSQL)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	created_at := time.Now().Format(time.RFC3339)
-	updated_at := created_at
-	statement.Exec(title, body, created_at, updated_at)
+	new_uuid := uuid.New()
+	id, err := new_uuid.MarshalBinary()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	created_at := time.Now().UTC().Format(time.RFC3339)
+	statement.Exec(id, title, body, created_at, created_at)
 }
+
+// func getPage(db *sql.DB, id []byte) {
+// 	db.QueryRow(`SELECT * FROM pages WHERE id = ?`, id)
+// 	return
+// }
 
 func getPages(db *sql.DB) {
 	rows, err := db.Query(`SELECT * FROM pages`)
@@ -83,11 +93,20 @@ func getPages(db *sql.DB) {
 	var pages []Page
 	for rows.Next() {
 		var page Page
-		rows.Scan(&page.Id, &page.Title, &page.Body, &page.CreatedAt, &page.UpdatedAt)
+		err := rows.Scan(&page.Id, &page.Title, &page.Body, &page.CreatedAt, &page.UpdatedAt)
+		if err != nil {
+			log.Println(err.Error())
+		}
 		pages = append(pages, page)
 	}
 	
 	for _, myrow := range pages {
-		fmt.Printf("%s: %s\n", myrow.Title, string(myrow.Body))
+		fmt.Printf("%x - %s: %s - %s - %s\n", 
+			myrow.Id,
+			myrow.Title,
+			myrow.Body,
+			myrow.CreatedAt,
+			myrow.UpdatedAt,
+		)
 	}
 }
