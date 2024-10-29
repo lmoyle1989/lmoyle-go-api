@@ -20,6 +20,8 @@ type Page struct {
 	UpdatedAt string
 }
 
+var DB *sql.DB
+
 func main() {
 	os.Remove("sqlite-database.db")
 
@@ -29,20 +31,20 @@ func main() {
 	}
 	file.Close()
 	
-	mydb, _ := sql.Open("sqlite3", "./sqlite-database.db")
-	defer mydb.Close()
+	DB, _ = sql.Open("sqlite3", "./sqlite-database.db")
+	defer DB.Close()
 
-	initializeDB(mydb)
+	initializeDB(DB)
 	
-	insertPage(mydb, "Test Title", []byte("Here is some sample text for my initial page."))
-	insertPage(mydb, "Title #2", []byte("Here is some sample text for my second page."))
+	insertPage(DB, "Test Title", []byte("Here is some sample text for my initial page."))
+	insertPage(DB, "Title #2", []byte("Here is some sample text for my second page."))
 
-	mypages, err := getPages(mydb)
+	mypages, err := getPages(DB)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	
-	mypage, err := getPage(mydb, mypages[0].Id)
+	mypage, err := getPage(DB, mypages[0].Id)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -56,13 +58,30 @@ func main() {
 	)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", root_handler)
+	mux.HandleFunc("GET /", rootHandler)
+	mux.HandleFunc("GET /page/{id}/", getPageByIdHandler)
+	mux.HandleFunc("GET /pages/", getPagesHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
-func root_handler(w http.ResponseWriter, r *http.Request) {
+func rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Slug: %s\nHeader: %s", r.URL.Path[1:], r.Header)
+}
+
+func getPageByIdHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Page: %s", r.PathValue("id"))
+}
+
+func getPagesHandler(w http.ResponseWriter, r *http.Request) {
+	pages, err := getPages(DB)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for idx, page := range pages {
+		fmt.Fprintf(w, "Page %d: %s\n\n", idx, page.Title)
+	}
 }
 
 func initializeDB(db *sql.DB) {
