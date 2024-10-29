@@ -37,7 +37,23 @@ func main() {
 	insertPage(mydb, "Test Title", []byte("Here is some sample text for my initial page."))
 	insertPage(mydb, "Title #2", []byte("Here is some sample text for my second page."))
 
-	getPages(mydb)
+	mypages, err := getPages(mydb)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	
+	mypage, err := getPage(mydb, mypages[0].Id)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Printf("%x - %s: %s - %s - %s\n", 
+		mypage.Id,
+		mypage.Title,
+		mypage.Body,
+		mypage.CreatedAt,
+		mypage.UpdatedAt,
+	)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", root_handler)
@@ -79,15 +95,22 @@ func insertPage(db *sql.DB, title string, body []byte) {
 	statement.Exec(id, title, body, created_at, created_at)
 }
 
-// func getPage(db *sql.DB, id []byte) {
-// 	db.QueryRow(`SELECT * FROM pages WHERE id = ?`, id)
-// 	return
-// }
+func getPage(db *sql.DB, id []byte) (*Page, error) {
+	query := `SELECT * FROM pages WHERE id = ?`
+	row := db.QueryRow(query, id)
+	var page Page
+	err := row.Scan(&page.Id, &page.Title, &page.Body, &page.CreatedAt, &page.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
 
-func getPages(db *sql.DB) {
+	return &page, nil
+}
+
+func getPages(db *sql.DB) ([]Page, error) {
 	rows, err := db.Query(`SELECT * FROM pages`)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, err
 	}
 	defer rows.Close()
 	var pages []Page
@@ -95,18 +118,10 @@ func getPages(db *sql.DB) {
 		var page Page
 		err := rows.Scan(&page.Id, &page.Title, &page.Body, &page.CreatedAt, &page.UpdatedAt)
 		if err != nil {
-			log.Println(err.Error())
+			return nil, err
 		}
 		pages = append(pages, page)
 	}
-	
-	for _, myrow := range pages {
-		fmt.Printf("%x - %s: %s - %s - %s\n", 
-			myrow.Id,
-			myrow.Title,
-			myrow.Body,
-			myrow.CreatedAt,
-			myrow.UpdatedAt,
-		)
-	}
+
+	return pages, nil
 }
