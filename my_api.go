@@ -61,6 +61,9 @@ func main() {
 	mux.HandleFunc("GET /", rootHandler)
 	mux.HandleFunc("GET /page/{id}/", getPageByIdHandler)
 	mux.HandleFunc("GET /pages/", getPagesHandler)
+	mux.HandleFunc("GET /mystify/", getMystifyHandler)
+
+    mux.Handle("GET /js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js")))) //why do I need stripprefix here?
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
@@ -143,4 +146,8 @@ func getPages(db *sql.DB) ([]Page, error) {
 	}
 
 	return pages, nil
+}
+
+func getMystifyHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "mystify.html")
 }
