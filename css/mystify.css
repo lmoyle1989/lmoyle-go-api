@@ -1,0 +1,12 @@
+body {
+    background-color: black;
+}
+
+h1 {
+    color: blue;
+    text-align: center;
+}
+
+#canvasArea {
+    text-align: center;
+}

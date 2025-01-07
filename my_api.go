@@ -64,6 +64,7 @@ func main() {
 	mux.HandleFunc("GET /mystify/", getMystifyHandler)
 
     mux.Handle("GET /js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js")))) //why do I need stripprefix here?
+	mux.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
