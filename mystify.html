@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Go Web App</title>
+    <title>Canvas</title>
     <link rel="stylesheet" href="/css/mystify.css"></link>
 </head>
 <body>
     <h1>Mystify</h1>
 
     <div id="canvasArea">
-        <canvas id="mainCanvas" width="800" height="640" style="border:2px solid white;"></canvas> 
+        <div id="canvasButtons" class="buttonControlPanel">
+            <button id="startButton" class="controlButton">Start</button>
+            <button id="pauseButton" class="controlButton">Pause</button>
+            <button id="resetButton" class="controlButton">Reset</button>
+        </div>
+        <canvas id="mainCanvas" width="800" height="640" style="border:2px solid grey;"></canvas>
     </div>
 
     <script src="/js/mystify.js"></script>
