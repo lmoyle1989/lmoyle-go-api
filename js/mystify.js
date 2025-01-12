@@ -4,7 +4,9 @@ const height = canvas.height;
 const width = canvas.width;
 const startTime = new Date();
 let prevTime = 0;
-let baseSpeed = 2;
+let maxSpeed = 0.75;
+let minSpeed = 0.25;
+let speedModifier = 2;
 let shapes = [];
 
 function Point(px, py, dx, dy) {
@@ -14,18 +16,24 @@ function Point(px, py, dx, dy) {
   this.dy = dy;
 }
 
-Point.prototype.updatePos = function(step) {
-  let newx = this.px + ((this.dx * step * baseSpeed) / 10);
-  let newy = this.py + ((this.dy * step * baseSpeed) / 10);
+Point.prototype.updateDisplacement = function(step) {
+  let newx = this.px + ((this.dx * step * speedModifier) / 10);
+  let newy = this.py + ((this.dy * step * speedModifier) / 10);
 
   if (newx < 0 || newx > width) {
     this.dx *= -1;
+    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
+    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
+
     if (newx < 0) { newx = 0; }
     else { newx = width; }
   }
 
   if (newy < 0 || newy > height) {
     this.dy *= -1;
+    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
+    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
+    
     if (newy < 0) { newy = 0; }
     else { newy = height; }
   }
@@ -38,22 +46,27 @@ function getRandomVal(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function getNonZeroRandomDir(min, max) {
+function getRandomVelocity(absmin, absmax) {
   negative = Math.floor(Math.random() * 2);
-  val = getRandomVal(min, max);
+  val = getRandomVal(absmin, absmax);
   return negative ? val : (val * -1);
 }
 
-function initRandomShape(vertices) {
+function getBounceVelocity(cur, min, max) {
+  val = getRandomVal(min, max);
+  return cur > 0 ? val : (val * -1);
+}
+
+function generateRandomShape(numVertices) {
   const shapePoints = [];
   
-  for (let i = 0; i < vertices; i++) {
+  for (let i = 0; i < numVertices; i++) {
     shapePoints.push(
       new Point(
         getRandomVal(1, width - 1),
         getRandomVal(1, height - 1),
-        getNonZeroRandomDir(0.25, 0.75),
-        getNonZeroRandomDir(0.25, 0.75),
+        getRandomVelocity(minSpeed, maxSpeed),
+        getRandomVelocity(minSpeed, maxSpeed),
       )
     )
   }
@@ -78,7 +91,7 @@ function myDraw(timestamp) {
 
   for (i = 0; i < shapes.length; i++) {
     for (j = 0; j < shapes[i].length; j++) {
-      shapes[i][j].updatePos(step);
+      shapes[i][j].updateDisplacement(step);
     }
   }
 
@@ -88,9 +101,7 @@ function myDraw(timestamp) {
 }
 
 function mystifyInit() {
-  shapes.push(
-    initRandomShape(4)
-  );
+  shapes.push(generateRandomShape(4));
   window.requestAnimationFrame(myDraw);
 }
 
