@@ -6,19 +6,21 @@ const startTime = new Date();
 let prevTime = 0;
 let maxSpeed = 0.75;
 let minSpeed = 0.25;
-let speedModifier = 2;
+let speedModifier = 3;
 let shapes = [];
+let keptFrames = 22;
+let frameSpacing = 3;
 
 function Point(px, py, dx, dy) {
-  this.px = px;
-  this.py = py;
+  this.px = [px];
+  this.py = [py];
   this.dx = dx;
   this.dy = dy;
 }
 
 Point.prototype.updateDisplacement = function(step) {
-  let newx = this.px + ((this.dx * step * speedModifier) / 10);
-  let newy = this.py + ((this.dy * step * speedModifier) / 10);
+  let newx = this.px[0] + ((this.dx * step * speedModifier) / 10);
+  let newy = this.py[0] + ((this.dy * step * speedModifier) / 10);
 
   if (newx < 0 || newx > width) {
     this.dx *= -1;
@@ -37,9 +39,15 @@ Point.prototype.updateDisplacement = function(step) {
     if (newy < 0) { newy = 0; }
     else { newy = height; }
   }
-  
-  this.px = newx;
-  this.py = newy;
+
+  this.px.unshift(newx);
+  if (this.px.length > keptFrames) {
+    this.px.pop();
+  }
+  this.py.unshift(newy);
+  if (this.py.length > keptFrames) {
+    this.py.pop();
+  }
 };
 
 function getRandomVal(min, max) {
@@ -80,13 +88,15 @@ function myDraw(timestamp) {
   ctx.clearRect(0, 0, width, height);
   
   for (i = 0; i < shapes.length; i++) {
-    ctx.beginPath();
-    ctx.moveTo(shapes[i][0].px, shapes[i][0].py);
-    for (j = 1; j < shapes[i].length; j++) {
-      ctx.lineTo(shapes[i][j].px, shapes[i][j].py);
+    for (j = 0; j < keptFrames; j += frameSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(shapes[i][0].px[j], shapes[i][0].py[j]);
+      for (k = 1; k < shapes[i].length; k++) {
+        ctx.lineTo(shapes[i][k].px[j], shapes[i][k].py[j]);
+      }
+      ctx.closePath();
+      ctx.stroke();
     }
-    ctx.closePath();
-    ctx.stroke();
   }
 
   for (i = 0; i < shapes.length; i++) {
@@ -102,6 +112,7 @@ function myDraw(timestamp) {
 
 function mystifyInit() {
   shapes.push(generateRandomShape(4));
+  shapes.push(generateRandomShape(3));
   window.requestAnimationFrame(myDraw);
 }
 
