@@ -4,9 +4,9 @@ const height = canvas.height;
 const width = canvas.width;
 const startTime = new Date();
 let prevTime = 0;
-let maxSpeed = 0.75;
-let minSpeed = 0.25;
-let speedModifier = 3;
+let maxSpeed = 0.9;
+let minSpeed = 0.1;
+let speedModifier = 0.3;
 let shapes = [];
 let keptFrames = 22;
 let frameSpacing = 3;
@@ -19,16 +19,15 @@ function Point(px, py, dx, dy) {
 }
 
 Point.prototype.updateDisplacement = function(step) {
-  let newx = this.px[0] + ((this.dx * step * speedModifier) / 10);
-  let newy = this.py[0] + ((this.dy * step * speedModifier) / 10);
+  let newx = this.px[0] + ((this.dx * step * speedModifier));
+  let newy = this.py[0] + ((this.dy * step * speedModifier));
 
   if (newx < 0 || newx > width) {
     this.dx *= -1;
     this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
     this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
 
-    if (newx < 0) { newx = 0; }
-    else { newx = width; }
+    newx = newx < 0 ? 0 : width;
   }
 
   if (newy < 0 || newy > height) {
@@ -36,18 +35,14 @@ Point.prototype.updateDisplacement = function(step) {
     this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
     this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
     
-    if (newy < 0) { newy = 0; }
-    else { newy = height; }
+    newy = newy < 0 ? 0 : height;
   }
 
   this.px.unshift(newx);
-  if (this.px.length > keptFrames) {
-    this.px.pop();
-  }
+  while (this.px.length > keptFrames) { this.px.pop(); }
+
   this.py.unshift(newy);
-  if (this.py.length > keptFrames) {
-    this.py.pop();
-  }
+  while (this.py.length > keptFrames) { this.py.pop(); }
 };
 
 function Shape(points, color) {
@@ -75,11 +70,11 @@ function getBounceVelocity(cur, min, max) {
 }
 
 function generateRandomShape(numVertices) {
-  const newColor = `rgb(${getRandomInt(256)} ${getRandomInt(256)} ${getRandomInt(256)})`
-  const shapePoints = [];
+  const color = `rgb(${getRandomInt(256)} ${getRandomInt(256)} ${getRandomInt(256)})`
+  const points = [];
   
   for (let i = 0; i < numVertices; i++) {
-    shapePoints.push(
+    points.push(
       new Point(
         getRandomVal(1, width - 1),
         getRandomVal(1, height - 1),
@@ -88,15 +83,12 @@ function generateRandomShape(numVertices) {
       )
     )
   }
-
-  newShape = new Shape(shapePoints, newColor)
   
-  return newShape;
+  return new Shape(points, color);
 }
 
-function myDraw(timestamp) {
+function drawFrame(timestamp) {
   const step = timestamp - prevTime;
-
   ctx.clearRect(0, 0, width, height);
   
   for (i = 0; i < shapes.length; i++) {
@@ -119,14 +111,13 @@ function myDraw(timestamp) {
   }
 
   prevTime = timestamp;
-
-  window.requestAnimationFrame(myDraw);
+  window.requestAnimationFrame(drawFrame);
 }
 
 function mystifyInit() {
   shapes.push(generateRandomShape(4));
   shapes.push(generateRandomShape(3));
-  window.requestAnimationFrame(myDraw);
+  window.requestAnimationFrame(drawFrame);
 }
 
 window.onload = function() {
