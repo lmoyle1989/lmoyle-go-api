@@ -4,7 +4,8 @@ const height = canvas.height;
 const width = canvas.width;
 const startTime = new Date();
 let prevTime = 0;
-let baseSpeed = 1;
+let baseSpeed = 2;
+let shapes = [];
 
 function Point(px, py, dx, dy) {
   this.px = px;
@@ -33,55 +34,66 @@ Point.prototype.updatePos = function(step) {
   this.py = newy;
 };
 
-const my1Point = new Point(400, 320, 1, 1);
-const my2Point = new Point(400, 320, 1, -1);
-const my3Point = new Point(400, 320, -1, -1);
-const my4Point = new Point(400, 320, -1, 1);
+function getRandomVal(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
-window.onload = function() {
-  mystifyInit();
-};
+function getNonZeroRandomDir(min, max) {
+  negative = Math.floor(Math.random() * 2);
+  val = getRandomVal(min, max);
+  return negative ? val : (val * -1);
+}
 
-function mystifyInit() {
-  window.requestAnimationFrame(myDraw);
+function initRandomShape(vertices) {
+  const shapePoints = [];
+  
+  for (let i = 0; i < vertices; i++) {
+    shapePoints.push(
+      new Point(
+        getRandomVal(1, width - 1),
+        getRandomVal(1, height - 1),
+        getNonZeroRandomDir(0.25, 0.75),
+        getNonZeroRandomDir(0.25, 0.75),
+      )
+    )
+  }
+
+  return shapePoints;
 }
 
 function myDraw(timestamp) {
-  // what if i just keep a deque of previous point locations...?
   const step = timestamp - prevTime;
 
   ctx.clearRect(0, 0, width, height);
   
-  // ctx.beginPath();
-  // ctx.arc(my1Point.px, my1Point.py, 15, 0, 2 * Math.PI);
-  // ctx.fill();
+  for (i = 0; i < shapes.length; i++) {
+    ctx.beginPath();
+    ctx.moveTo(shapes[i][0].px, shapes[i][0].py);
+    for (j = 1; j < shapes[i].length; j++) {
+      ctx.lineTo(shapes[i][j].px, shapes[i][j].py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
 
-  // ctx.beginPath();
-  // ctx.arc(my2Point.px, my2Point.py, 15, 0, 2 * Math.PI);
-  // ctx.fill();
-
-  // ctx.beginPath();
-  // ctx.arc(my3Point.px, my3Point.py, 15, 0, 2 * Math.PI);
-  // ctx.fill();
-
-  // ctx.beginPath();
-  // ctx.arc(my4Point.px, my4Point.py, 15, 0, 2 * Math.PI);
-  // ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(my1Point.px, my1Point.py);
-  ctx.lineTo(my2Point.px, my2Point.py);
-  ctx.lineTo(my3Point.px, my3Point.py);
-  ctx.lineTo(my4Point.px, my4Point.py);
-  ctx.closePath();
-  ctx.stroke();
-
-  my1Point.updatePos(step);
-  my2Point.updatePos(step);
-  my3Point.updatePos(step);
-  my4Point.updatePos(step);
+  for (i = 0; i < shapes.length; i++) {
+    for (j = 0; j < shapes[i].length; j++) {
+      shapes[i][j].updatePos(step);
+    }
+  }
 
   prevTime = timestamp;
 
   window.requestAnimationFrame(myDraw);
 }
+
+function mystifyInit() {
+  shapes.push(
+    initRandomShape(4)
+  );
+  window.requestAnimationFrame(myDraw);
+}
+
+window.onload = function() {
+  mystifyInit();
+};
