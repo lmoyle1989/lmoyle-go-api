@@ -50,8 +50,17 @@ Point.prototype.updateDisplacement = function(step) {
   }
 };
 
+function Shape(points, color) {
+  this.points = points
+  this.color = color
+}
+
 function getRandomVal(min, max) {
   return Math.random() * (max - min) + min;
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
 }
 
 function getRandomVelocity(absmin, absmax) {
@@ -66,6 +75,7 @@ function getBounceVelocity(cur, min, max) {
 }
 
 function generateRandomShape(numVertices) {
+  const newColor = `rgb(${getRandomInt(256)} ${getRandomInt(256)} ${getRandomInt(256)})`
   const shapePoints = [];
   
   for (let i = 0; i < numVertices; i++) {
@@ -79,7 +89,9 @@ function generateRandomShape(numVertices) {
     )
   }
 
-  return shapePoints;
+  newShape = new Shape(shapePoints, newColor)
+  
+  return newShape;
 }
 
 function myDraw(timestamp) {
@@ -88,11 +100,12 @@ function myDraw(timestamp) {
   ctx.clearRect(0, 0, width, height);
   
   for (i = 0; i < shapes.length; i++) {
+    ctx.strokeStyle = shapes[i].color
     for (j = 0; j < keptFrames; j += frameSpacing) {
       ctx.beginPath();
-      ctx.moveTo(shapes[i][0].px[j], shapes[i][0].py[j]);
-      for (k = 1; k < shapes[i].length; k++) {
-        ctx.lineTo(shapes[i][k].px[j], shapes[i][k].py[j]);
+      ctx.moveTo(shapes[i].points[0].px[j], shapes[i].points[0].py[j]);
+      for (k = 1; k < shapes[i].points.length; k++) {
+        ctx.lineTo(shapes[i].points[k].px[j], shapes[i].points[k].py[j]);
       }
       ctx.closePath();
       ctx.stroke();
@@ -100,8 +113,8 @@ function myDraw(timestamp) {
   }
 
   for (i = 0; i < shapes.length; i++) {
-    for (j = 0; j < shapes[i].length; j++) {
-      shapes[i][j].updateDisplacement(step);
+    for (j = 0; j < shapes[i].points.length; j++) {
+      shapes[i].points[j].updateDisplacement(step);
     }
   }
 
