@@ -3,6 +3,9 @@ const ctx = canvas.getContext("2d");
 const height = canvas.height;
 const width = canvas.width;
 const startTime = new Date();
+let animId;
+let paused = 0;
+let unPaused = 0;
 let prevTime = 0;
 let maxSpeed = 0.9;
 let minSpeed = 0.1;
@@ -88,7 +91,12 @@ function generateRandomShape(numVertices) {
 }
 
 function drawFrame(timestamp) {
-  const step = timestamp - prevTime;
+  let step = timestamp - prevTime;
+  if (unPaused) { 
+    unPaused = 0;
+    step = 0;
+  }
+
   ctx.clearRect(0, 0, width, height);
   
   for (i = 0; i < shapes.length; i++) {
@@ -111,13 +119,26 @@ function drawFrame(timestamp) {
   }
 
   prevTime = timestamp;
-  window.requestAnimationFrame(drawFrame);
+  if (!paused) {
+    animId = window.requestAnimationFrame(drawFrame);
+  }
+}
+
+function pauseAnimation() {
+  paused = 1;
+}
+
+function unpauseAnimation() {
+  if (!paused) { return };
+  paused = 0;
+  unPaused = 1;
+  animId = window.requestAnimationFrame(drawFrame);
 }
 
 function mystifyInit() {
   shapes.push(generateRandomShape(4));
   shapes.push(generateRandomShape(3));
-  window.requestAnimationFrame(drawFrame);
+  animId = window.requestAnimationFrame(drawFrame);
 }
 
 window.onload = function() {
