@@ -3,16 +3,24 @@ const ctx = canvas.getContext("2d");
 const height = canvas.height;
 const width = canvas.width;
 const startTime = new Date();
+const pauseButton = document.querySelector("#pauseButton");
+const startButton = document.querySelector("#startButton");
+const resetButton = document.querySelector("#resetButton");
 let animId;
-let paused = 0;
+let paused = 1;
 let unPaused = 0;
 let prevTime = 0;
 let maxSpeed = 0.9;
 let minSpeed = 0.1;
-let speedModifier = 0.3;
+let speedModifier = 0.25;
 let shapes = [];
-let keptFrames = 22;
-let frameSpacing = 3;
+let keptFrames = 40;
+let frameSpacing = 4;
+
+function Shape(points, color) {
+  this.points = points;
+  this.color = color;
+}
 
 function Point(px, py, dx, dy) {
   this.px = [px];
@@ -27,16 +35,16 @@ Point.prototype.updateDisplacement = function(step) {
 
   if (newx < 0 || newx > width) {
     this.dx *= -1;
-    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
-    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
+    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed);
+    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed);
 
     newx = newx < 0 ? 0 : width;
   }
 
   if (newy < 0 || newy > height) {
     this.dy *= -1;
-    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed)
-    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed)
+    this.dx = getBounceVelocity(this.dx, minSpeed, maxSpeed);
+    this.dy = getBounceVelocity(this.dy, minSpeed, maxSpeed);
     
     newy = newy < 0 ? 0 : height;
   }
@@ -47,11 +55,6 @@ Point.prototype.updateDisplacement = function(step) {
   this.py.unshift(newy);
   while (this.py.length > keptFrames) { this.py.pop(); }
 };
-
-function Shape(points, color) {
-  this.points = points
-  this.color = color
-}
 
 function getRandomVal(min, max) {
   return Math.random() * (max - min) + min;
@@ -73,7 +76,7 @@ function getBounceVelocity(cur, min, max) {
 }
 
 function generateRandomShape(numVertices) {
-  const color = `rgb(${getRandomInt(256)} ${getRandomInt(256)} ${getRandomInt(256)})`
+  const color = `rgb(${getRandomInt(256)} ${getRandomInt(256)} ${getRandomInt(256)})`;
   const points = [];
   
   for (let i = 0; i < numVertices; i++) {
@@ -84,7 +87,7 @@ function generateRandomShape(numVertices) {
         getRandomVelocity(minSpeed, maxSpeed),
         getRandomVelocity(minSpeed, maxSpeed),
       )
-    )
+    );
   }
   
   return new Shape(points, color);
@@ -100,7 +103,7 @@ function drawFrame(timestamp) {
   ctx.clearRect(0, 0, width, height);
   
   for (i = 0; i < shapes.length; i++) {
-    ctx.strokeStyle = shapes[i].color
+    ctx.strokeStyle = shapes[i].color;
     for (j = 0; j < keptFrames; j += frameSpacing) {
       ctx.beginPath();
       ctx.moveTo(shapes[i].points[0].px[j], shapes[i].points[0].py[j]);
@@ -128,17 +131,24 @@ function pauseAnimation() {
   paused = 1;
 }
 
-function unpauseAnimation() {
-  if (!paused) { return };
+function startAnimation() {
+  if (!paused) { return; }
   paused = 0;
   unPaused = 1;
   animId = window.requestAnimationFrame(drawFrame);
 }
 
-function mystifyInit() {
+function resetAnimation() {
+  shapes = [];
   shapes.push(generateRandomShape(4));
   shapes.push(generateRandomShape(3));
-  animId = window.requestAnimationFrame(drawFrame);
+}
+
+function mystifyInit() {
+  startButton.addEventListener("click", startAnimation);
+  pauseButton.addEventListener("click", pauseAnimation);
+  resetButton.addEventListener("click", resetAnimation);
+  resetAnimation();
 }
 
 window.onload = function() {
