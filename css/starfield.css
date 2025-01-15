@@ -1,0 +1,25 @@
+body {
+    background-color: black;
+}
+
+h1 {
+    color: blue;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#canvasArea {
+    text-align: center;
+}
+
+#mainCanvas {
+    background-color: black;
+}
+
+.controlButton {
+    display: inline-block;
+}
+
+.buttonControlPanel {
+    margin-bottom: 10px;
+}
