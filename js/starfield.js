@@ -2,20 +2,19 @@ const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;
 const width = canvas.width;
-const startTime = new Date();
 const pauseButton = document.querySelector("#pauseButton");
 const startButton = document.querySelector("#startButton");
+const resetButton = document.querySelector("#resetButton");
 let animId;
 let prevTime = 0;
 let paused = 1;
 let unPaused = 0;
-let vp = 1000;
-let maxradius = 10;
-let zmax = 0.8 * vp;
-let xmax = width;
-let ymax = height;
-let numberOfStars = 100;
-let speedModifier = 1;
+let vp = 5000;
+let zmax = 0.9 * vp;
+let minradius = 0.5;
+let maxradius = 2;
+let numberOfStars = 300;
+let speedModifier = 1.5;
 let stars = [];
 
 class Star {
@@ -23,28 +22,53 @@ class Star {
     this.px = px;
     this.py = py;
     this.pz = pz;
-
-    this.projx = 0;
-    this.projy = 0;
-    this.projrad = 0;
-    // this.projtrans = 0;
   }
 
-  calculate_projection() {
+  calculateProjection() {
     this.projx = this.px * (1 - (this.pz / vp));
     this.projy = this.py * (1 - (this.pz / vp));
-    this.projrad = maxradius * (1 - (this.pz / (zmax + 1)));
+    this.projrad = minradius + (maxradius * (1 - (this.pz / (zmax + 1))));
   }
 
-  update_pos(step) {
+  updatePosition(step) {
     let newz = this.pz - (step * speedModifier);
-    if (newz < 0) { newz = zmax; }
+    if (newz < 0) { 
+      newz = zmax; 
+      coords = getRandomStartCoords();
+      this.px = coords[0];
+      this.py = coords[1];
+    }
     this.pz = newz;
-    this.calculate_projection();
+    this.calculateProjection();
   }
 }
 
-stars.push(new Star(400, 0, 800));
+function getRandomPosNegVal(max) {
+  return (Math.random() - 0.5) * (max * 2);
+}
+
+function getRandomVal(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function getRandomStartCoords() {
+  let x = getRandomPosNegVal(width);
+  let y = getRandomPosNegVal(height);
+  let z = getRandomVal(1, zmax);
+
+  while ((Math.abs(x) < width / 2) && (Math.abs(y) < height / 2)) {
+    x = getRandomVal(width);
+    y = getRandomVal(height);
+  }
+
+  return [x,y,z];
+}
+
+function generateRandomStar() {
+  coords = getRandomStartCoords();
+
+  return new Star(coords[0], coords[1], coords[2]);
+}
 
 function drawFrame(timestamp) {
   let step = timestamp - prevTime;
@@ -56,7 +80,7 @@ function drawFrame(timestamp) {
   ctx.clearRect(-(width / 2), -(height / 2), width, height);
 
   for (i = 0; i < stars.length; i++) {
-    stars[i].update_pos(step);
+    stars[i].updatePosition(step);
   }
   
   for (i = 0; i < stars.length; i++) {
@@ -82,10 +106,20 @@ function startAnimation() {
   animId = window.requestAnimationFrame(drawFrame);
 }
 
+function resetAnimation() {
+  stars = [];
+  for (i = 0; i < numberOfStars; i++) {
+    stars.push(generateRandomStar());
+  }
+}
+
 function starfieldInit() {
   startButton.addEventListener("click", startAnimation);
   pauseButton.addEventListener("click", pauseAnimation);
+  resetButton.addEventListener("click", resetAnimation);
+  resetAnimation()
   ctx.translate((width / 2), (height / 2));
+  ctx.fillStyle = "white";
   ctx.save();
 }
 
