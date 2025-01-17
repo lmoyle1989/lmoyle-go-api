@@ -63,6 +63,7 @@ func main() {
 	mux.HandleFunc("GET /pages/", getPagesHandler)
 	mux.HandleFunc("GET /mystify/", getMystifyHandler)
 	mux.HandleFunc("GET /starfield/", getStarfieldHandler)
+	mux.HandleFunc("GET /maze/", getMazeHandler)
 
     mux.Handle("GET /js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js")))) //why do I need stripprefix here?
 	mux.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
@@ -156,4 +157,8 @@ func getMystifyHandler(w http.ResponseWriter, r *http.Request) {
 
 func getStarfieldHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "starfield.html")
+}
+
+func getMazeHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "maze.html")
 }

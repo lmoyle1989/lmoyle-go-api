@@ -16,6 +16,7 @@ let speedModifier = 0.25;
 let shapes = [];
 let keptFrames = 40;
 let frameSpacing = 4;
+// TODO: bezier or parabolic - midpoints?
 
 function Shape(points, color) {
   this.points = points;

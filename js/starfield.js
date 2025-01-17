@@ -10,12 +10,13 @@ let prevTime = 0;
 let paused = 1;
 let unPaused = 0;
 let vp = 5000;
-let zmax = 0.9 * vp;
+let zmax = 0.95 * vp;
 let minradius = 0.5;
 let maxradius = 2;
 let numberOfStars = 300;
-let speedModifier = 1.5;
+let speedModifier = 1.0;
 let stars = [];
+// TODO: Shading
 
 class Star {
   constructor(px, py, pz) {
