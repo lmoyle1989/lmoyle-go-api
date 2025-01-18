@@ -18,7 +18,7 @@ let numberOfStars = 200;
 let speedModifier = 0.25;
 let stars = [];
 let warpFactor = 4;
-let startAreaModifier = 2;
+let spawnAreaModifier = 2;
 
 class Star {
   constructor(px, py, pz) {
@@ -30,6 +30,8 @@ class Star {
   calculateProjection() {
     this.projx = this.px * proj(this.pz, warpFactor);
     this.projy = this.py * proj(this.pz, warpFactor);
+    
+    // so i think this actually needs to be a function of the euclidean distance to the origin
     this.projrad = minradius + (maxradius * (1 - (this.pz / zmax)));
   }
 
@@ -37,17 +39,17 @@ class Star {
     let newz = this.pz - (step * speedModifier);
     if (newz < 0) { 
       newz = zmax; 
-      coords = getRandomStartCoords();
-      this.px = coords[0];
-      this.py = coords[1];
+      let coords = getRandomStartCoords();
+      this.px = coords.x;
+      this.py = coords.y;
     }
     this.pz = newz;
     this.calculateProjection();
   }
 }
 
-// in desmos visualize with -(x/(v/(r^n))^(1/n) + r which this is derived from
-// simple proportional projection reduces to 1 - (x / v)
+// in desmos visualize with -(z/(v/(r^n))^(1/n) + r which this is derived from.
+// a simple proportional projection reduces to 1 - (z / v)
 function proj(z, n) {
   return (1 - (Math.pow((z * (vr ** n)) / vp, (1 / n)) / vr));
 }
@@ -61,8 +63,8 @@ function getRandomVal(min, max) {
 }
 
 function getRandomStartCoords() {
-  let x = getRandomPosNegVal(width * startAreaModifier);
-  let y = getRandomPosNegVal(height * startAreaModifier);
+  let x = getRandomPosNegVal(width * spawnAreaModifier);
+  let y = getRandomPosNegVal(height * spawnAreaModifier);
   let z = getRandomVal(1, zmax);
 
   while ((Math.abs(x) < width / 2) && (Math.abs(y) < height / 2)) {
@@ -70,13 +72,17 @@ function getRandomStartCoords() {
     y = getRandomVal(height);
   }
 
-  return [x,y,z];
+  return {
+    x: x,
+    y: y,
+    z: z,
+  };
 }
 
 function generateRandomStar() {
   coords = getRandomStartCoords();
 
-  return new Star(coords[0], coords[1], coords[2]);
+  return new Star(coords.x, coords.y, coords.z);
 }
 
 function drawFrame(timestamp) {
@@ -120,6 +126,21 @@ function resetAnimation() {
   for (i = 0; i < numberOfStars; i++) {
     stars.push(generateRandomStar());
   }
+  // test cases
+  // for (i = 0; i < 10; i++) {
+  //   stars.push(new Star(
+  //     (((i*2) / 10) * width) + (width / 2),
+  //     (((i*2) / 10) * height) + (height / 2) / 2,
+  //     zmax
+  //   ))
+  // }
+  // for (i = 0; i < 10; i++) {
+  //   stars.push(new Star(
+  //     (width / 2),
+  //     (height / 2),
+  //     (zmax - ((i / 10) * (zmax / 2)) )
+  //   ))
+  // }
 }
 
 function starfieldInit() {
