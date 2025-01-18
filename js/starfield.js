@@ -9,14 +9,16 @@ let animId;
 let prevTime = 0;
 let paused = 1;
 let unPaused = 0;
-let vp = 5000;
-let zmax = 0.95 * vp;
+let vp = 1000;
+let vr = (Math.sqrt(((height ** 2) / 4) + ((width ** 2) / 4))) * 2;
+let zmax = 0.8 * vp;
 let minradius = 0.5;
 let maxradius = 2;
-let numberOfStars = 300;
-let speedModifier = 1.0;
+let numberOfStars = 200;
+let speedModifier = 0.25;
 let stars = [];
-// TODO: Shading
+let warpFactor = 4;
+let startAreaModifier = 2;
 
 class Star {
   constructor(px, py, pz) {
@@ -26,9 +28,9 @@ class Star {
   }
 
   calculateProjection() {
-    this.projx = this.px * (1 - (this.pz / vp));
-    this.projy = this.py * (1 - (this.pz / vp));
-    this.projrad = minradius + (maxradius * (1 - (this.pz / (zmax + 1))));
+    this.projx = this.px * proj(this.pz, warpFactor);
+    this.projy = this.py * proj(this.pz, warpFactor);
+    this.projrad = minradius + (maxradius * (1 - (this.pz / zmax)));
   }
 
   updatePosition(step) {
@@ -44,17 +46,23 @@ class Star {
   }
 }
 
+// in desmos visualize with -(x/(v/(r^n))^(1/n) + r which this is derived from
+// simple proportional projection reduces to 1 - (x / v)
+function proj(z, n) {
+  return (1 - (Math.pow((z * (vr ** n)) / vp, (1 / n)) / vr));
+}
+
 function getRandomPosNegVal(max) {
   return (Math.random() - 0.5) * (max * 2);
 }
 
 function getRandomVal(min, max) {
-  return Math.random() * (max - min) + min;
+  return (Math.random() * (max - min) + min);
 }
 
 function getRandomStartCoords() {
-  let x = getRandomPosNegVal(width);
-  let y = getRandomPosNegVal(height);
+  let x = getRandomPosNegVal(width * startAreaModifier);
+  let y = getRandomPosNegVal(height * startAreaModifier);
   let z = getRandomVal(1, zmax);
 
   while ((Math.abs(x) < width / 2) && (Math.abs(y) < height / 2)) {
