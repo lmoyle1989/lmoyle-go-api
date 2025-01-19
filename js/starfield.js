@@ -9,16 +9,15 @@ let animId;
 let prevTime = 0;
 let paused = 1;
 let unPaused = 0;
-let vp = 1000;
-let vr = (Math.sqrt(((height ** 2) / 4) + ((width ** 2) / 4))) * 2;
-let zmax = 0.8 * vp;
-let minradius = 0.5;
-let maxradius = 2;
-let numberOfStars = 200;
-let speedModifier = 0.25;
 let stars = [];
-let warpFactor = 4;
-let spawnAreaModifier = 2;
+let zmax = 10000;
+let vr = Math.sqrt(((height / 2) ** 2) + ((width / 2) ** 2)) * 1.5; // this is the radius of the circle that is centered on and surrounds the viewport
+let fov = 500; // this controls the curvature of the view lense sphere, 0 would mean a full hemisphere, bigger is flatter
+let minradius = 0.25;
+let maxradius = 3;
+let numberOfStars = 400;
+let speedModifier = 2;
+let spawnAreaModifier = 4;
 
 class Star {
   constructor(px, py, pz) {
@@ -28,10 +27,10 @@ class Star {
   }
 
   calculateProjection() {
-    this.projx = this.px * proj(this.pz, warpFactor);
-    this.projy = this.py * proj(this.pz, warpFactor);
+    this.projx = trigproj(this.px, this.pz);
+    this.projy = trigproj(this.py, this.pz);
     
-    // so i think this actually needs to be a function of the euclidean distance to the origin
+    // this could be better i think if it was a function of 3d euclidean distance instead of just depth
     this.projrad = minradius + (maxradius * (1 - (this.pz / zmax)));
   }
 
@@ -48,10 +47,19 @@ class Star {
   }
 }
 
+// old method I used to cheat perspective
 // in desmos visualize with -(z/(v/(r^n))^(1/n) + r which this is derived from.
 // a simple proportional projection reduces to 1 - (z / v)
-function proj(z, n) {
-  return (1 - (Math.pow((z * (vr ** n)) / vp, (1 / n)) / vr));
+// function proj(z, n) {
+//   return (1 - (Math.pow((z * (vr ** n)) / zmax, (1 / n)) / vr));
+// }
+
+// this is much better
+// x is the vertical distance from the center of the view sphere
+// z is the depth of the "star" to be projected onto the screen
+function trigproj(x, z) {
+  let rad = Math.sqrt((vr ** 2) + (fov ** 2)); // this is the radius of the fov lense sphere, could be a constant
+  return Math.sin(Math.atan( x / (z + fov))) * rad;
 }
 
 function getRandomPosNegVal(max) {
@@ -72,11 +80,7 @@ function getRandomStartCoords() {
     y = getRandomVal(height);
   }
 
-  return {
-    x: x,
-    y: y,
-    z: z,
-  };
+  return { x: x, y: y, z: z };
 }
 
 function generateRandomStar() {
@@ -126,28 +130,13 @@ function resetAnimation() {
   for (i = 0; i < numberOfStars; i++) {
     stars.push(generateRandomStar());
   }
-  // test cases
-  // for (i = 0; i < 10; i++) {
-  //   stars.push(new Star(
-  //     (((i*2) / 10) * width) + (width / 2),
-  //     (((i*2) / 10) * height) + (height / 2) / 2,
-  //     zmax
-  //   ))
-  // }
-  // for (i = 0; i < 10; i++) {
-  //   stars.push(new Star(
-  //     (width / 2),
-  //     (height / 2),
-  //     (zmax - ((i / 10) * (zmax / 2)) )
-  //   ))
-  // }
 }
 
 function starfieldInit() {
   startButton.addEventListener("click", startAnimation);
   pauseButton.addEventListener("click", pauseAnimation);
   resetButton.addEventListener("click", resetAnimation);
-  resetAnimation()
+  resetAnimation();
   ctx.translate((width / 2), (height / 2));
   ctx.fillStyle = "white";
   ctx.save();
