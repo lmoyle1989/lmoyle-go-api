@@ -12,54 +12,42 @@ let unPaused = 0;
 let stars = [];
 let zmax = 10000;
 let vr = Math.sqrt(((height / 2) ** 2) + ((width / 2) ** 2)) * 1.5; // this is the radius of the circle that is centered on and surrounds the viewport
-let fov = 500; // this controls the curvature of the view lense sphere, 0 would mean a full hemisphere, bigger is flatter
+// TODO: make fov param an angle, and calculate the current number?
+let fov = 500; // this controls the curvature of the view lense sphere, 0 would mean a full hemisphere (180), bigger is flatter/narrower
 let minradius = 0.25;
 let maxradius = 3;
 let numberOfStars = 400;
 let speedModifier = 2;
 let spawnAreaModifier = 4;
+let noSpawnAreaModifier = 4;
 
 class Star {
-  constructor(px, py, pz) {
-    this.px = px;
-    this.py = py;
-    this.pz = pz;
+  constructor(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
 
   calculateProjection() {
-    this.projx = trigproj(this.px, this.pz);
-    this.projy = trigproj(this.py, this.pz);
+    let rad = Math.sqrt((vr ** 2) + (fov ** 2)); // radius of the view sphere
+    this.projx = Math.sin(Math.atan(this.x / (this.z + fov))) * rad;
+    this.projy = Math.sin(Math.atan(this.y / (this.z + fov))) * rad;
     
     // this could be better i think if it was a function of 3d euclidean distance instead of just depth
-    this.projrad = minradius + (maxradius * (1 - (this.pz / zmax)));
+    this.projrad = minradius + (maxradius * (1 - (this.z / zmax)));
   }
 
   updatePosition(step) {
-    let newz = this.pz - (step * speedModifier);
+    let newz = this.z - (step * speedModifier);
     if (newz < 0) { 
       newz = zmax; 
       let coords = getRandomStartCoords();
-      this.px = coords.x;
-      this.py = coords.y;
+      this.x = coords.x;
+      this.y = coords.y;
     }
-    this.pz = newz;
+    this.z = newz;
     this.calculateProjection();
   }
-}
-
-// old method I used to cheat perspective
-// in desmos visualize with -(z/(v/(r^n))^(1/n) + r which this is derived from.
-// a simple proportional projection reduces to 1 - (z / v)
-// function proj(z, n) {
-//   return (1 - (Math.pow((z * (vr ** n)) / zmax, (1 / n)) / vr));
-// }
-
-// this is much better
-// x is the vertical distance from the center of the view sphere
-// z is the depth of the "star" to be projected onto the screen
-function trigproj(x, z) {
-  let rad = Math.sqrt((vr ** 2) + (fov ** 2)); // this is the radius of the fov lense sphere, could be a constant
-  return Math.sin(Math.atan( x / (z + fov))) * rad;
 }
 
 function getRandomPosNegVal(max) {
@@ -71,11 +59,12 @@ function getRandomVal(min, max) {
 }
 
 function getRandomStartCoords() {
+  // TODO: change this to randomly generate polar coord then covert to cartesian
   let x = getRandomPosNegVal(width * spawnAreaModifier);
   let y = getRandomPosNegVal(height * spawnAreaModifier);
   let z = getRandomVal(1, zmax);
 
-  while ((Math.abs(x) < width / 2) && (Math.abs(y) < height / 2)) {
+  while ((Math.abs(x) < width / noSpawnAreaModifier) && (Math.abs(y) < height / noSpawnAreaModifier)) {
     x = getRandomVal(width);
     y = getRandomVal(height);
   }
