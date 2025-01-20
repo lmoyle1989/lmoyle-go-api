@@ -36,8 +36,8 @@ func main() {
 
 	initializeDB(DB)
 	
-	insertPage(DB, "Test Title", []byte("Here is some sample text for my initial page."))
-	insertPage(DB, "Title #2", []byte("Here is some sample text for my second page."))
+	insertPage(DB, "", []byte("Listening on 8080"))
+	insertPage(DB, "", []byte(""))
 
 	mypages, err := getPages(DB)
 	if err != nil {

@@ -30,14 +30,17 @@ class Star {
 
   calculateProjection() {
     let rad = Math.sqrt((vr ** 2) + (fov ** 2)); // radius of the view sphere
+    // add depth sorting and star color
     this.projx = Math.sin(Math.atan(this.x / (this.z + fov))) * rad;
     this.projy = Math.sin(Math.atan(this.y / (this.z + fov))) * rad;
     
     // this could be better i think if it was a function of 3d euclidean distance instead of just depth
+    // twinkle
     this.projrad = minradius + (maxradius * (1 - (this.z / zmax)));
   }
 
   updatePosition(step) {
+    // add depth sorting and star color
     let newz = this.z - (step * speedModifier);
     if (newz < 0) { 
       newz = zmax; 
@@ -64,7 +67,7 @@ function getRandomStartCoords() {
   let y = getRandomPosNegVal(height * spawnAreaModifier);
   let z = getRandomVal(1, zmax);
 
-  while ((Math.abs(x) < width / noSpawnAreaModifier) && (Math.abs(y) < height / noSpawnAreaModifier)) {
+  while ((Math.abs(x) < (width / noSpawnAreaModifier)) && (Math.abs(y) < (height / noSpawnAreaModifier))) {
     x = getRandomVal(width);
     y = getRandomVal(height);
   }
