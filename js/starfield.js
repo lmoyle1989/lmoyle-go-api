@@ -15,7 +15,7 @@ let vr = Math.sqrt(((height / 2) ** 2) + ((width / 2) ** 2)) * 1.5; // this is t
 // TODO: make fov param an angle, and calculate the current number?
 let fov = 500; // this controls the curvature of the view lense sphere, 0 would mean a full hemisphere (180), bigger is flatter/narrower
 let minradius = 0.25;
-let maxradius = 3;
+let maxradius = 4;
 let numberOfStars = 400;
 let speedModifier = 2;
 let spawnAreaModifier = 4;
@@ -35,8 +35,14 @@ class Star {
     this.projy = Math.sin(Math.atan(this.y / (this.z + fov))) * rad;
     
     // this could be better i think if it was a function of 3d euclidean distance instead of just depth
-    // twinkle
+    // twinkle or glow effects would be nice
     this.projrad = minradius + (maxradius * (1 - (this.z / zmax)));
+    // this.projrad = 0;
+    // camera origin = (0,0,-fov)
+    // let distance = Math.sqrt((this.x ** 2) + (this.y ** 2) + ((this.z + fov) ** 2));
+    // if (distance < (zmax + fov)) {
+    //   this.projrad = maxradius * (1 - (distance / (zmax + fov)));
+    // }
   }
 
   updatePosition(step) {
