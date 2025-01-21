@@ -17,7 +17,7 @@ let fov = 500; // this controls the curvature of the view lense sphere, 0 would 
 let minradius = 0.25;
 let maxradius = 4;
 let numberOfStars = 400;
-let speedModifier = 2;
+let speedModifier = 0.75;
 let spawnAreaModifier = 4;
 let noSpawnAreaModifier = 4;
 
@@ -47,14 +47,13 @@ class Star {
 
   updatePosition(step) {
     // add depth sorting and star color
-    let newz = this.z - (step * speedModifier);
-    if (newz < 0) { 
-      newz = zmax; 
+    this.z -= (step * speedModifier);
+    if (this.z < 0) { 
       let coords = getRandomStartCoords();
       this.x = coords.x;
       this.y = coords.y;
+      this.z = zmax;
     }
-    this.z = newz;
     this.calculateProjection();
   }
 }
@@ -74,8 +73,8 @@ function getRandomStartCoords() {
   let z = getRandomVal(1, zmax);
 
   while ((Math.abs(x) < (width / noSpawnAreaModifier)) && (Math.abs(y) < (height / noSpawnAreaModifier))) {
-    x = getRandomVal(width);
-    y = getRandomVal(height);
+    x = getRandomPosNegVal(width * spawnAreaModifier);
+    y = getRandomPosNegVal(height * spawnAreaModifier);
   }
 
   return { x: x, y: y, z: z };
@@ -95,12 +94,9 @@ function drawFrame(timestamp) {
   }
   
   ctx.clearRect(-(width / 2), -(height / 2), width, height);
-
-  for (i = 0; i < stars.length; i++) {
-    stars[i].updatePosition(step);
-  }
   
   for (i = 0; i < stars.length; i++) {
+    stars[i].updatePosition(step);
     ctx.beginPath();
     ctx.arc(stars[i].projx, stars[i].projy, stars[i].projrad, 0, (2 * Math.PI));
     ctx.fill();
