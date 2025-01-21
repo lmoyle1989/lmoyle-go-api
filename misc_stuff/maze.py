@@ -1,4 +1,5 @@
 import random
+import json
 
 # Generates a randomized grid maze of size m x n with intended start position to be 0,0 and ending at m-1,n-1
 # TODOs:
@@ -9,11 +10,11 @@ class Maze:
   def __init__(self, m, n):
     self.m = m
     self.n = n
-    self.path = set() # this does not need to be a set
+    self.pathEdges = [] # this does not need to be a set
     self.vis = []
     self.initVis()
-    self.generatePath()
-    self.addPathToVis()
+    self.generatePathEdges()
+    self.addEdgesToVis()
 
   def initVis(self):
     for i in range((self.m * 2) - 1):
@@ -25,8 +26,8 @@ class Maze:
           row.append(" ")
       self.vis.append(row)
     
-  def generatePath(self):
-    start = ((0,0), (0,0)) # (current cell, coming from this cell) aka "edge"
+  def generatePathEdges(self):
+    start = [(0,0), (0,0)] # (current cell, coming from this cell) aka "edge"
     dir = [(1,0), (0,1), (-1,0), (0,-1)]
     visited = set()
 
@@ -40,38 +41,44 @@ class Maze:
       row, col = cur
       if cur not in visited:
         visited.add(cur)
-        self.path.add(edge)
+        self.pathEdges.append(edge)
         if cur != (self.m - 1, self.n - 1):
           random.shuffle(dir)
           for x, y in dir:
             newr = row + x
             newc = col + y
             if isValid(newr, newc):
-              stack.append(((newr, newc), (row, col)))
+              stack.append([(newr, newc), (row, col)])
 
-  def addPathToVis(self):
+  def addEdgesToVis(self):
     
-    def removeWall(edge):
+    def addEdge(edge):
       row1, col1 = edge[0]
       row2, col2 = edge[1]
       cur = (row1 * 2, col1 * 2)
       d = (row2 - row1, col2 - col1)
       self.vis[cur[0] + d[0]][cur[1] + d[1]] = "X"
 
-    for edge in self.path:
-      removeWall(edge)
+    for edge in self.pathEdges:
+      addEdge(edge)
 
   def printMaze(self):
     for row in self.vis:
       line = []
       for c in row:
-        if c == "X":
-          line.append("XX")
-        else:
-          line.append("  ")
+          line.append(f"{c}{c}")
       print("".join(line))
+
+  def getJson(self):
+    data = {
+      "m": self.m,
+      "n": self.n,
+      "edges": self.pathEdges,
+      "vis": self.vis
+    }
+    return json.dumps(data)
 
 
 if __name__ == "__main__":
-  maze = Maze(25, 25)
+  maze = Maze(10, 10)
   maze.printMaze()
