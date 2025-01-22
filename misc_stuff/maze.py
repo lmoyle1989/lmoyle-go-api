@@ -40,16 +40,22 @@ class Maze:
       edge = stack.pop()
       cur = edge[0]
       row, col = cur
+      # last = edge[1]
+      # lrow, lcol = last
       if cur not in visited:
         visited.add(cur)
         self.pathEdges.append(edge)
         if cur != end:
+          # dir = [(1,0), (0,1), (-1,0), (0,-1)]
+          # dir.append((row - lrow, col - lcol)) # repeat this more times to favor straighter maze paths
           random.shuffle(dir)
           for x, y in dir:
             newr = row + x
             newc = col + y
             if isValid(newr, newc):
               stack.append([(newr, newc), (row, col)])
+        # else:
+        #   random.shuffle(stack)
 
   def addEdgesToVis(self):
     
@@ -81,5 +87,5 @@ class Maze:
 
 
 if __name__ == "__main__":
-  maze = Maze(10, 10)
+  maze = Maze(25, 25)
   maze.printMaze()
