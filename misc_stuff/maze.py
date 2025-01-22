@@ -27,14 +27,15 @@ class Maze:
       self.vis.append(row)
     
   def generatePathEdges(self):
-    start = [(0,0), (0,0)] # (current cell, coming from this cell) aka "edge"
+    start = (0,0) # (current cell, coming from this cell) aka "edge"
+    end = (self.m - 1, self.n - 1)
     dir = [(1,0), (0,1), (-1,0), (0,-1)]
     visited = set()
 
     def isValid(row, col):
       return row >= 0 and row < self.m and col >= 0 and col < self.n and (row,col) not in visited
 
-    stack = [start] # sort and then shuffle the first, say, 80% so I don't get branches near the end
+    stack = [[start, start]] # sort and then shuffle the first, say, 80% so I don't get branches near the end
     while stack:
       edge = stack.pop()
       cur = edge[0]
@@ -42,7 +43,7 @@ class Maze:
       if cur not in visited:
         visited.add(cur)
         self.pathEdges.append(edge)
-        if cur != (self.m - 1, self.n - 1):
+        if cur != end:
           random.shuffle(dir)
           for x, y in dir:
             newr = row + x
