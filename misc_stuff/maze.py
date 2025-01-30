@@ -12,6 +12,7 @@ class Maze:
     self.n = n
     self.pathEdges = [] # this does not need to be a set
     self.vis = []
+    self.straightness = 1 # scale as a proportion to the center
     self.initVis()
     self.generatePathEdges()
     self.addEdgesToVis()
@@ -40,22 +41,24 @@ class Maze:
       edge = stack.pop()
       cur = edge[0]
       row, col = cur
-      # last = edge[1]
-      # lrow, lcol = last
+      last = edge[1]
+      lrow, lcol = last
       if cur not in visited:
         visited.add(cur)
         self.pathEdges.append(edge)
         if cur != end:
-          # dir = [(1,0), (0,1), (-1,0), (0,-1)]
-          # dir.append((row - lrow, col - lcol)) # repeat this more times to favor straighter maze paths
+          dir = [(1,0), (0,1), (-1,0), (0,-1)]
+          if row != self.m - 1 and col != self.n - 1 and row != 0 and col != 0:
+            for _ in range(self.straightness):
+              dir.append((row - lrow, col - lcol))
           random.shuffle(dir)
           for x, y in dir:
             newr = row + x
             newc = col + y
             if isValid(newr, newc):
               stack.append([(newr, newc), (row, col)])
-        # else:
-        #   random.shuffle(stack)
+        else:
+          random.shuffle(stack)
 
   def addEdgesToVis(self):
     
