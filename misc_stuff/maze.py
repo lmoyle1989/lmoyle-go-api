@@ -1,5 +1,6 @@
 import random
 import json
+import sys
 
 # Generates a randomized grid maze of size m x n with intended start position to be 0,0 and ending at m-1,n-1
 # TODOs:
@@ -91,4 +92,7 @@ class Maze:
 
 if __name__ == "__main__":
   maze = Maze(25, 25)
-  maze.printMaze()
+  if len(sys.argv) > 1 and sys.argv[1] == "json":
+    print(maze.getJson())
+  else:
+    maze.printMaze()

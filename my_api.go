@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	// "html/template"
 	"net/http"
 	"time"
@@ -64,6 +65,7 @@ func main() {
 	mux.HandleFunc("GET /mystify/", getMystifyHandler)
 	mux.HandleFunc("GET /starfield/", getStarfieldHandler)
 	mux.HandleFunc("GET /maze/", getMazeHandler)
+	mux.HandleFunc("GET /mazedata/", getMazeData)
 
     mux.Handle("GET /js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js")))) //why do I need stripprefix here?
 	mux.Handle("GET /css/", http.StripPrefix("/css/", http.FileServer(http.Dir("./css"))))
@@ -161,4 +163,15 @@ func getStarfieldHandler(w http.ResponseWriter, r *http.Request) {
 
 func getMazeHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "maze.html")
+}
+
+func getMazeData(w http.ResponseWriter, _ *http.Request) {
+	command := exec.Command("python3", "misc_stuff/maze.py", "json")
+	output, err := command.Output()
+	if err != nil {
+		fmt.Println("Error running python script")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
 }
