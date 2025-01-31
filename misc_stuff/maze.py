@@ -91,7 +91,7 @@ class Maze:
 
 
 if __name__ == "__main__":
-  maze = Maze(25, 25)
+  maze = Maze(5, 5)
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     print(maze.getJson())
   else:

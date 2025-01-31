@@ -162,16 +162,34 @@ func getStarfieldHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getMazeHandler(w http.ResponseWriter, r *http.Request) {
+	// templateFile := "templates/base.tmpl"
+	// template, err := template.New(templateFile).ParseFiles(templateFile)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// data, err := mazeDataJSON()
+	// if err != nil {
+	// 	return
+	// }
+	// template.Execute(os.Stdout, data)
 	http.ServeFile(w, r, "maze.html")
 }
 
-func getMazeData(w http.ResponseWriter, _ *http.Request) {
+func mazeDataJSON() ([]byte, error) {
 	command := exec.Command("python3", "misc_stuff/maze.py", "json")
 	output, err := command.Output()
 	if err != nil {
 		fmt.Println("Error running python script")
+		return nil, err
+	}
+	return output, nil
+}
+
+func getMazeData(w http.ResponseWriter, _ *http.Request) {
+	data, err := mazeDataJSON()
+	if err != nil {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(output)
+	w.Write(data)
 }
