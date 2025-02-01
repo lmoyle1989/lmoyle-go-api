@@ -149,10 +149,9 @@ class Maze:
 
 
 if __name__ == "__main__":
-  maze = Maze(10, 10)
+  maze = Maze(20, 25)
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     print(maze.getJson())
   else:
     maze.printMaze()
-    # print(len(maze.lines[0]), len(maze.lines[1]))
-    # print(maze.lines[0])
+    print(maze.getJson())
