@@ -12,42 +12,54 @@ let unPaused = 0;
 let speedModifier = 1.5;
 let sizeScale = 10;
 
+class Point {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+  }
+}
+
 class Maze {
   constructor(lines, m, n) {
     this.m = m * 2;
     this.n = n * 2;
     this.hlines = lines[0];
     this.vlines = lines[1];
+    this.cp = new Point(1, 1)
   }
 
   drawRow(ctx, row, y) {
+    const offset = this.cp.x
     for (let i = 0; i < row.length; i++) {
       ctx.beginPath();
-      ctx.moveTo((row[i][0] - (this.n / 2)) * sizeScale, y);
-      ctx.lineTo((row[i][1] - (this.n / 2)) * sizeScale, y);
+      ctx.moveTo((row[i][0] - offset) * sizeScale, y);
+      ctx.lineTo((row[i][1] - offset) * sizeScale, y);
       ctx.stroke();
     }
   }
 
   drawCol(ctx, col, x) {
+    const offset = this.cp.y
     for (let i = 0; i < col.length; i++) {
       ctx.beginPath();
-      ctx.moveTo(x, (col[i][0] - (this.m / 2)) * sizeScale);
-      ctx.lineTo(x, (col[i][1] - (this.m / 2)) * sizeScale);
+      ctx.moveTo(x, (col[i][0] - offset) * sizeScale);
+      ctx.lineTo(x, (col[i][1] - offset) * sizeScale);
       ctx.stroke();
     }
   }
 
   drawRows(ctx) {
+    const offset = this.cp.y
     for (let i = 0; i < this.hlines.length; i++) {
-      const y = ((i * 2) - (this.m / 2)) * sizeScale;
+      const y = ((i * 2) - offset) * sizeScale;
       this.drawRow(ctx, this.hlines[i], y);
     }
   }
 
   drawCols(ctx) {
+    const offset = this.cp.x
     for (let i = 0; i < this.vlines.length; i++) {
-      const x = ((i * 2) - (this.n / 2)) * sizeScale;
+      const x = ((i * 2) - offset) * sizeScale;
       this.drawCol(ctx, this.vlines[i], x);
     }
   }
@@ -69,14 +81,21 @@ function drawFrame(timestamp) {
     step = 0;
   }
 
-  ctx.clearRect(-(width / 2), -(height / 2), width, height);
-
+  // ctx.rotate(((0.1 * step) * Math.PI) / 180);
+  ctx.clearRect(-width, -height, 2 * width, 2 * height);
   maze.drawMaze(ctx);
+  drawOriginDot(ctx);
 
   prevTime = timestamp;
-  // if (!paused) {
-  //   animId = window.requestAnimationFrame(drawFrame);
-  // }
+  if (!paused) {
+    animId = window.requestAnimationFrame(drawFrame);
+  }
+}
+
+function drawOriginDot(ctx) {
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, (2 * Math.PI));
+  ctx.fill();
 }
 
 function pauseAnimation() {
