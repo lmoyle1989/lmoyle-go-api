@@ -11,12 +11,15 @@ class Maze:
   def __init__(self, m, n):
     self.m = m
     self.n = n
-    self.pathEdges = [] # this does not need to be a set
+    self.pathEdges = []
     self.vis = []
-    self.straightness = 1 # scale as a proportion to the center
+    self.lines = []
+    self.straightness = 1 # could try scaling as a distance of the current path node to the center?
     self.initVis()
     self.generatePathEdges()
     self.addEdgesToVis()
+    self.lines.append(self.generateHorizontalLines())
+    self.lines.append(self.generateVerticalLines())
 
   def initVis(self):
     for i in range((self.m * 2) - 1):
@@ -29,7 +32,7 @@ class Maze:
       self.vis.append(row)
     
   def generatePathEdges(self):
-    random.seed(10)
+    # random.seed(10)
     start = (0,0) # (current cell, coming from this cell) aka "edge"
     end = (self.m - 1, self.n - 1)
     dir = [(1,0), (0,1), (-1,0), (0,-1)]
@@ -86,7 +89,10 @@ class Maze:
     for row in self.vis:
       line = []
       for c in row:
-          line.append(f"{c}{c}")
+          if c == "X":
+            line.append("[]")
+          else:
+            line.append("  ")
       print("".join(line))
 
   def printNarrowMaze(self):
@@ -98,13 +104,14 @@ class Maze:
       "m": self.m,
       "n": self.n,
       "edges": self.pathEdges,
-      "vis": self.vis
+      "vis": self.vis,
+      "lines": self.lines
     }
     return json.dumps(data)
 
   def generateHorizontalLines(self):
     hlines = []
-    for i in range(len(self.vis)):
+    for i in range(0, len(self.vis), 2):
       rowlines = []
       start = -1
       for j in range(len(self.vis[i])):
@@ -123,7 +130,7 @@ class Maze:
 
   def generateVerticalLines(self):
     vlines = []
-    for j in range(len(self.vis[0])):
+    for j in range(0, len(self.vis[0]), 2):
       collines = []
       start = -1
       for i in range(len(self.vis)):
@@ -142,10 +149,10 @@ class Maze:
 
 
 if __name__ == "__main__":
-  maze = Maze(10, 15)
+  maze = Maze(10, 10)
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     print(maze.getJson())
   else:
-    maze.printNarrowMaze()
-    print(maze.generateHorizontalLines())
-    print(maze.generateVerticalLines())
+    maze.printMaze()
+    # print(len(maze.lines[0]), len(maze.lines[1]))
+    # print(maze.lines[0])
