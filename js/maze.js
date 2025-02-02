@@ -10,12 +10,13 @@ let prevTime = 0;
 let paused = 1;
 let unPaused = 0;
 let speedModifier = 1.5;
-let sizeScale = 10;
+let sizeScale = 20;
+let curRotation = 0;
 
 class Point {
   constructor(x, y) {
-    this.x = x
-    this.y = y
+    this.x = x;
+    this.y = y;
   }
 }
 
@@ -25,11 +26,12 @@ class Maze {
     this.n = n * 2;
     this.hlines = lines[0];
     this.vlines = lines[1];
-    this.cp = new Point(1, 1)
+    this.cp = new Point(1, 1);
+    this.cd = (0,0);
   }
 
   drawRow(ctx, row, y) {
-    const offset = this.cp.x
+    const offset = this.cp.x;
     for (let i = 0; i < row.length; i++) {
       ctx.beginPath();
       ctx.moveTo((row[i][0] - offset) * sizeScale, y);
@@ -39,7 +41,7 @@ class Maze {
   }
 
   drawCol(ctx, col, x) {
-    const offset = this.cp.y
+    const offset = this.cp.y;
     for (let i = 0; i < col.length; i++) {
       ctx.beginPath();
       ctx.moveTo(x, (col[i][0] - offset) * sizeScale);
@@ -49,7 +51,7 @@ class Maze {
   }
 
   drawRows(ctx) {
-    const offset = this.cp.y
+    const offset = this.cp.y;
     for (let i = 0; i < this.hlines.length; i++) {
       const y = ((i * 2) - offset) * sizeScale;
       this.drawRow(ctx, this.hlines[i], y);
@@ -57,7 +59,7 @@ class Maze {
   }
 
   drawCols(ctx) {
-    const offset = this.cp.x
+    const offset = this.cp.x;
     for (let i = 0; i < this.vlines.length; i++) {
       const x = ((i * 2) - offset) * sizeScale;
       this.drawCol(ctx, this.vlines[i], x);
@@ -94,7 +96,7 @@ function drawFrame(timestamp) {
 
 function drawOriginDot(ctx) {
   ctx.beginPath();
-  ctx.arc(0, 0, 5, 0, (2 * Math.PI));
+  ctx.arc(0, 0, sizeScale / 2, 0, (2 * Math.PI));
   ctx.fill();
 }
 

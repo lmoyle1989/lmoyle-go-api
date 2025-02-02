@@ -1,6 +1,8 @@
 import random
 import json
 import sys
+import os
+import time
 
 # Generates a randomized grid maze of size m x n with intended start position to be 0,0 and ending at m-1,n-1
 # TODOs:
@@ -8,13 +10,14 @@ import sys
 #   - make it favor straigher paths by adding the last dir duplicated onto the shuffled dir list
 #   - add command line args with import sys
 class Maze:
-  def __init__(self, m, n):
+  def __init__(self, m, n, seed):
+    random.seed(seed)
     self.m = m
     self.n = n
     self.pathEdges = []
     self.vis = []
     self.lines = []
-    self.straightness = 1 # could try scaling as a distance of the current path node to the center?
+    self.straightness = 2 # could try scaling as a distance of the current path node to the center?
     self.initVis()
     self.generatePathEdges()
     self.addEdgesToVis()
@@ -32,10 +35,9 @@ class Maze:
       self.vis.append(row)
     
   def generatePathEdges(self):
-    # random.seed(10)
     start = (0,0) # (current cell, coming from this cell) aka "edge"
     end = (self.m - 1, self.n - 1)
-    dir = [(1,0), (0,1), (-1,0), (0,-1)]
+    dirs = [(1,0), (0,1), (-1,0), (0,-1)]
     visited = set()
 
     def isValid(row, col):
@@ -52,12 +54,12 @@ class Maze:
         visited.add(cur)
         self.pathEdges.append(edge)
         if cur != end:
-          dir = [(1,0), (0,1), (-1,0), (0,-1)]
+          dirs = [(1,0), (0,1), (-1,0), (0,-1)]
           if row != self.m - 1 and col != self.n - 1 and row != 0 and col != 0:
             for _ in range(self.straightness):
-              dir.append((row - lrow, col - lcol))
-          random.shuffle(dir)
-          for x, y in dir:
+              dirs.append((row - lrow, col - lcol))
+          random.shuffle(dirs)
+          for x, y in dirs:
             newr = row + x
             newc = col + y
             if isValid(newr, newc):
@@ -92,7 +94,7 @@ class Maze:
           if c == "X":
             line.append("[]")
           else:
-            line.append("  ")
+            line.append(f"{c}{c}")
       print("".join(line))
 
   def printNarrowMaze(self):
@@ -147,11 +149,52 @@ class Maze:
 
     return vlines
 
+  def solveMaze(self, start, animate):
+    curPath = []
+    solved = False
+    end = ((self.m * 2) - 1, (self.n * 2) - 1)
+
+    def animateFrame(s):
+      os.system('clear')
+      self.printMaze()
+      time.sleep(s)
+
+    def mazeDfs(cur):
+      nonlocal solved
+      if not solved:
+        r,c = cur
+        self.vis[r][c] = "O"
+        curPath.append(cur)
+        if animate:
+          animateFrame(0.025)
+        if (r,c) == end:
+          solved = True
+        else:
+          dirs = [(1,0), (0,1), (-1,0), (0,-1)]
+          random.shuffle(dirs)
+          for x,y in dirs:
+            newr = r + x
+            newc = c + y
+            if self.vis[newr][newc] == "X":
+              mazeDfs((newr, newc))
+          pr,pc = curPath.pop()
+          if not solved:
+            self.vis[pr][pc] = "Z"
+            if animate:
+              animateFrame(0.025)
+    
+    mazeDfs(start)
+
 
 if __name__ == "__main__":
-  maze = Maze(20, 25)
+  seed = random.randint(1, 10000)
+  if len(sys.argv) > 1 and sys.argv[1] != "json":
+    seed = sys.argv[1]
+  maze = Maze(20, 25, seed)  
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     print(maze.getJson())
   else:
+    # maze.printNarrowMaze()
+    maze.solveMaze((1,1), False)
     maze.printMaze()
-    print(maze.getJson())
+    # print(maze.getJson())
