@@ -196,6 +196,7 @@ class Maze:
     
     mazeDfs(start)
     self.solutionPath = solutionPath[1:]
+    self.solutionPath.append(solutionPath[-1]) # add a duplicate of the end point so the animation stops
 
 
 if __name__ == "__main__":
@@ -209,5 +210,7 @@ if __name__ == "__main__":
     # maze.printNarrowMaze()
     maze.solveMaze((1,1), False)
     maze.printMaze()
+    print(maze.lines)
+    print()
     print(maze.solutionPath)
     # print(maze.getJson())
