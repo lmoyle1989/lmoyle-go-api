@@ -17,6 +17,7 @@ class Maze:
     self.pathEdges = []
     self.vis = []
     self.lines = []
+    self.solutionPath = []
     self.straightness = 2 # could try scaling as a distance of the current path node to the center?
     self.initVis()
     self.generatePathEdges()
@@ -105,9 +106,9 @@ class Maze:
     data = {
       "m": self.m,
       "n": self.n,
-      "edges": self.pathEdges,
       "vis": self.vis,
-      "lines": self.lines
+      "lines": self.lines,
+      "solution": self.solutionPath
     }
     return json.dumps(data)
 
@@ -151,6 +152,7 @@ class Maze:
 
   def solveMaze(self, start, animate):
     curPath = []
+    solutionPath = [[start[0], start[1]]]
     solved = False
     end = ((self.m * 2) - 1, (self.n * 2) - 1)
 
@@ -161,16 +163,23 @@ class Maze:
 
     def mazeDfs(cur):
       nonlocal solved
+      dirs = [(1,0), (0,1), (-1,0), (0,-1)]
       if not solved:
         r,c = cur
+        lr, lc = solutionPath[-1]
+        if abs(lr - r) + abs (lc - c) > 1: # after we backtrack back to the main path, we skip the fork node and need to refind it to add it back to the solution path
+          for x,y in dirs:
+            if self.vis[r+x][c+y] == "O":
+              solutionPath.append([r+x, c+y])
+              break
         self.vis[r][c] = "O"
         curPath.append(cur)
+        solutionPath.append([r,c])
         if animate:
           animateFrame(0.025)
         if (r,c) == end:
           solved = True
         else:
-          dirs = [(1,0), (0,1), (-1,0), (0,-1)]
           random.shuffle(dirs)
           for x,y in dirs:
             newr = r + x
@@ -179,22 +188,26 @@ class Maze:
               mazeDfs((newr, newc))
           pr,pc = curPath.pop()
           if not solved:
+            if [pr,pc] != solutionPath[-1]:
+              solutionPath.append([pr,pc])
             self.vis[pr][pc] = "Z"
             if animate:
               animateFrame(0.025)
     
     mazeDfs(start)
+    self.solutionPath = solutionPath[1:]
 
 
 if __name__ == "__main__":
   seed = random.randint(1, 10000)
   if len(sys.argv) > 1 and sys.argv[1] != "json":
     seed = sys.argv[1]
-  maze = Maze(20, 25, seed)  
+  maze = Maze(10, 10, seed)  
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     print(maze.getJson())
   else:
     # maze.printNarrowMaze()
     maze.solveMaze((1,1), False)
     maze.printMaze()
+    print(maze.solutionPath)
     # print(maze.getJson())
