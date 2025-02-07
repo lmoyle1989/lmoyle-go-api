@@ -179,7 +179,7 @@ func mazeDataJSON() ([]byte, error) {
 	command := exec.Command("python3", "misc_stuff/maze.py", "json")
 	output, err := command.Output()
 	if err != nil {
-		fmt.Println("Error running python script")
+		fmt.Println("Error running python script: ", err)
 		return nil, err
 	}
 	return output, nil

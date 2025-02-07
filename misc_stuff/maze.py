@@ -106,7 +106,6 @@ class Maze:
     data = {
       "m": self.m,
       "n": self.n,
-      "vis": self.vis,
       "lines": self.lines,
       "solution": self.solutionPath
     }
@@ -167,8 +166,8 @@ class Maze:
       if not solved:
         r,c = cur
         lr, lc = solutionPath[-1]
-        if abs(lr - r) + abs (lc - c) > 1: # after we backtrack back to the main path, we skip the fork node and need to refind it to add it back to the solution path
-          for x,y in dirs:
+        if abs(lr - r) + abs (lc - c) > 1: # after we backtrack back to the main path, the code skips the fork node b/c we already visited it, we need to refind it to add it back to the solution path # there is definitely a bug here. if the T fork itself is built off of a another fork we can have jump larger than 1
+          for x,y in dirs: # there is definitely a bug here. if the T fork itself is built off of a another fork we can have jump larger than 1
             if self.vis[r+x][c+y] == "O":
               solutionPath.append([r+x, c+y])
               break
@@ -198,19 +197,14 @@ class Maze:
     self.solutionPath = solutionPath[1:]
     self.solutionPath.append(solutionPath[-1]) # add a duplicate of the end point so the animation stops
 
-
 if __name__ == "__main__":
+  # sys.setrecursionlimit(2000)
   seed = random.randint(1, 10000)
   if len(sys.argv) > 1 and sys.argv[1] != "json":
     seed = sys.argv[1]
-  maze = Maze(10, 10, seed)  
+  maze = Maze(25, 25, seed) # much bigger than this an the recusion limit is reached  
   if len(sys.argv) > 1 and sys.argv[1] == "json":
+    maze.solveMaze((1,1), False)
     print(maze.getJson())
   else:
-    # maze.printNarrowMaze()
-    maze.solveMaze((1,1), False)
-    maze.printMaze()
-    print(maze.lines)
-    print()
-    print(maze.solutionPath)
-    # print(maze.getJson())
+    maze.solveMaze((1,1), True)
