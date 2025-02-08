@@ -198,11 +198,11 @@ class Maze:
     self.solutionPath.append(solutionPath[-1]) # add a duplicate of the end point so the animation stops
 
 if __name__ == "__main__":
-  # sys.setrecursionlimit(2000)
+  sys.setrecursionlimit(2500)
   seed = random.randint(1, 10000)
   if len(sys.argv) > 1 and sys.argv[1] != "json":
     seed = sys.argv[1]
-  maze = Maze(25, 25, seed) # much bigger than this an the recusion limit is reached  
+  maze = Maze(50, 50, seed) # much bigger than this an the recusion limit is reached  
   if len(sys.argv) > 1 and sys.argv[1] == "json":
     maze.solveMaze((1,1), False)
     print(maze.getJson())
