@@ -1,3 +1,7 @@
+// TODO:  reset button doesn't work properly mid-rotation
+//        maybe get some background or something?
+//        would be cool if the "player" moved along a curve instead of stopping to turn
+
 const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;
@@ -17,7 +21,8 @@ let paused = 1;
 let unPaused = 0;
 let sizeScale = 10;
 let curRotation = 0;
-let speedModifier = 0.5;
+let speedModifier = 1;
+let enableRotation = true;
 let maze;
 
 class Maze {
@@ -30,38 +35,23 @@ class Maze {
     this.idx = 0;
     this.dx = soln[this.idx+1][1] - soln[this.idx][1];
     this.dy = soln[this.idx+1][0] - soln[this.idx][0];
-    this.curdx = this.dx;
-    this.curdy = this.dy;
+    this.ldx = this.dx;
+    this.ldy = this.dy;
     this.x = soln[this.idx][1];
     this.y = soln[this.idx][0];
     this.lx = this.x;
     this.ly = this.y;
     
-    this.cw = 1;
+    this.rotationAmount = 0;
+    this.rotationDirection = 1;
     this.rotating = false;
     this.angle = dirMap[[this.dx, this.dy].toString()];
     this.lastangle = this.angle;
-    
-    // this.setInitialRotation(ctx)
   }
 
-  // setInitialRotation(ctx) {
-  //   ctx.save();
-  //   ctx.rotate((Math.PI * this.angle) / 180);
-  // }
-
-  // updateRotation(ctx, direction) {
-  //   ctx.restore();
-  //   ctx.save();
-  //   ctx.rotate((Math.PI * dirMap[direction.toString()]) / 180);
-  // }
-
-  getRotationDirection(cur, tar) {
-    const diff = tar - cur;
-    if (mod(diff, 360) == 270) {
-      return -1;
-    }
-    return 1;
+  setInitialRotation(ctx) {
+    ctx.save();
+    ctx.rotate((Math.PI / 180) * this.angle);
   }
 
   drawRow(ctx, row, y) {
@@ -107,26 +97,36 @@ class Maze {
 
   updatePos(step, ctx) {
     if (this.rotating) {
-      //
+      let dtheta = (step / 5) * speedModifier;
+      this.rotationAmount -= dtheta;
+      if (this.rotationAmount <= 0) {
+        dtheta -= (this.rotationAmount * -1);
+        this.rotating = false;
+      }
+      ctx.rotate((Math.PI / 180) * dtheta * this.rotationDirection);
     }
     else {
       this.x += ((step * this.dx) / 100) * speedModifier;
       this.y += ((step * this.dy) / 100) * speedModifier;
-      if ((Math.abs(this.x - this.lx) >= 1) || (Math.abs(this.y - this.ly) >= 1)) {
-        this.lx = this.soln[this.idx+1][1]; // update last position to current position
+      if ((Math.abs(this.x - this.lx) >= 1) || (Math.abs(this.y - this.ly) >= 1)) { // detect if weve made it to a new grid point
+        this.lx = this.soln[this.idx+1][1]; // update last position to current position because we just got here
         this.ly = this.soln[this.idx+1][0];
-        this.curdx = this.dx; // save last direction to compare to next step
-        this.curdy = this.dy;
+        this.ldx = this.dx; // save last direction to compare to next step
+        this.ldy = this.dy;
         this.idx += 1; // move pointer to target the next step of the solution path
         this.dx = this.soln[this.idx+1][1] - this.soln[this.idx][1]; // update movement direction to towards the next step in the path
         this.dy = this.soln[this.idx+1][0] - this.soln[this.idx][0];
-        if ((this.curdx != this.dx) || (this.curdy != this.dy)) { // correct our graphical to the grid when we change direction
+        if ((this.ldx != this.dx) || (this.ldy != this.dy)) { // detect if we changed movement direction
           this.lastangle = this.angle;
           this.angle = dirMap[[this.dx, this.dy].toString()];
-          this.x = this.lx;
+          this.x = this.lx; // snap our graphical position to the grid when we change direction to
           this.y = this.ly;
-          // this.rotating = true;
-          this.cw = this.getRotationDirection(this.lastangle, this.angle);
+          if (enableRotation) {
+            this.rotationAmount = getRotationAmount(this.lastangle, this.angle);
+            this.rotationDirection = Math.sign(this.rotationAmount);
+            this.rotationAmount = Math.abs(this.rotationAmount);
+            this.rotating = true;
+          }
         }
       }
     }
@@ -137,6 +137,14 @@ function mod(n, m) {
   return ((n % m) + m) % m;
 }
 
+function getRotationAmount(cur, tar) {
+  const diff = tar - cur;
+  const val = mod(diff, 360);
+  if (val == 270) { return -90; }
+  else if (val == 90) { return 90; }
+  else { return 180; }
+}
+
 function drawFrame(timestamp) {
   let step = timestamp - prevTime;
   if (unPaused) { 
@@ -144,7 +152,6 @@ function drawFrame(timestamp) {
     step = 0;
   }
 
-  // ctx.rotate(((0.1 * step) * Math.PI) / 180);
   ctx.clearRect(-width, -height, 2 * width, 2 * height);
   maze.updatePos(step, ctx);
   maze.drawMaze(ctx);
@@ -174,11 +181,12 @@ function startAnimation() {
 }
 
 async function resetAnimation() {
-  // ctx.restore();
+  ctx.restore();
   maze = await getMazeData();
+  maze.setInitialRotation(ctx)
 }
 
-function mazeInit() {
+function mazeInterfaceInit() {
   startButton.addEventListener("click", startAnimation);
   pauseButton.addEventListener("click", pauseAnimation);
   resetButton.addEventListener("click", resetAnimation);
@@ -202,5 +210,6 @@ async function getMazeData() {
 window.onload = async function() {
   canvasInit();
   maze = await getMazeData();
-  mazeInit();
+  maze.setInitialRotation(ctx)
+  mazeInterfaceInit();
 };
