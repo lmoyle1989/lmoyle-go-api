@@ -3,19 +3,27 @@
 <head>
     <title>Pipes</title>
     <link rel="stylesheet" href="/css/pipes.css"></link>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.174.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Pipes</h1>
-
+    
     <div id="canvasArea">
         <div id="canvasButtons" class="buttonControlPanel">
             <button id="startButton" class="controlButton">Start</button>
             <button id="pauseButton" class="controlButton">Pause</button>
             <button id="resetButton" class="controlButton">Reset</button>
         </div>
-        <canvas id="mainCanvas" width="800" height="640" style="border:2px solid grey;"></canvas>
+        <div id="mainCanvas" style="border: 2px solid grey; width: 800px; height: 640px; display: inline-block;"></div>
     </div>
 
-    <script src="/js/pipes.js"></script>
+    <script type="module" src="/js/pipes.js"></script>
 </body>
 </html>
