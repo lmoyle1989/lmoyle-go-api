@@ -1,6 +1,9 @@
-// TODO:  reset button doesn't work properly mid-rotation
-//        maybe get some background or something?
-//        would be cool if the "player" moved along a curve instead of stopping to turn
+// TODOs:
+//  reset button doesn't work properly mid-rotation
+//  maybe get some background or something?
+//  would be cool if the "player" moved along a curve instead of stopping to turn
+//  add ability to toggle rotation
+//  rewrite the maze generator in JS or make getting the mazedata less hacky    
 
 const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
@@ -25,6 +28,8 @@ let speedModifier = 1;
 let enableRotation = true;
 let maze;
 
+
+// The key here is that the "player" does not move, nor really exist; the map is just rotating and be rerendered around the midpoint
 class Maze {
   constructor(lines, soln, m, n) {
     this.m = m * 2;
@@ -119,7 +124,7 @@ class Maze {
         if ((this.ldx != this.dx) || (this.ldy != this.dy)) { // detect if we changed movement direction
           this.lastangle = this.angle;
           this.angle = dirMap[[this.dx, this.dy].toString()];
-          this.x = this.lx; // snap our graphical position to the grid when we change direction to
+          this.x = this.lx; // snap our graphical position to the grid when we change direction to keep us in the maze lanes, instead of stacking up float error
           this.y = this.ly;
           if (enableRotation) {
             this.rotationAmount = getRotationAmount(this.lastangle, this.angle);

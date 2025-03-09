@@ -1,3 +1,8 @@
+//  TODOs: 
+//  1. Fix issue with animation getting messed up when changing tabs or windows
+//  2. Make rendered star radius a function of euclidean distance from the viewer, not just z distance
+//  3. Figure out a way not to have a deadzone in the center where no stars spawn
+
 const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;

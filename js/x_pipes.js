@@ -1,3 +1,8 @@
+//  This was my attempt at doing pipes wihout three.js, its kinda cool insofar as it uses a
+//  similar technique that I was using in starfield for faking perspective, and I did some coolish
+//  math to adjust a pipe's "width". Ultimately is was always destined to fails since it doesnt
+//  do clipping or shading etc.
+
 const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;
@@ -67,9 +72,18 @@ function drawPipe(pipe, ctx) {
   ctx.fill();
 }
 
+// Each "pipe" is defined by 2 circles and a line connecting their midpoints,
+// with the circles representing the radius of the pipe when its projected on the screen.
+// Basically what these functions do when they are used together is to calculate the
+// 2 points on the the line that is perpendicular to the pipe's centerline line that 
+// intersect the pipe circle, when drawn the perpedicular line is drawn through the midpoint.
+// This allows us to get the 4 points that define a trapezoid that simulates the tapering of
+// a pipe due to perspective, due to the fact that they will be tangent to both of a pipe's circles.
+//
 // a = x val of the center of the arc
 // m = inverse slop of the line connecting points
 // r = projected radius of the end point arc
+//
 function calcx(a, m, r) {
   if (m == Infinity || m == -Infinity) {
     return [a, a];
@@ -90,6 +104,7 @@ function calcy(b, m, r) {
   let y2 = ((b / (m ** 2)) + b + (Math.sqrt(((m ** 2) * (r ** 2)) + (r ** 2)) / m)) / ((1 / (m ** 2)) + 1);
   return [y1, y2];
 }
+
 
 let pa = new Point(-100.1,100,100);
 let pb = new Point(-100,-100,100);

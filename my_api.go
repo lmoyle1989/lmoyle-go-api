@@ -1,3 +1,9 @@
+// TODOs:
+//	turn the basic resource API into a guest book
+//	get templating working
+//	makes the maze data stuff less hacky
+//	reorganize HTML stuff so its not in root directory
+
 package main
 
 import (

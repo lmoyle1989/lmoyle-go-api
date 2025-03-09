@@ -1,3 +1,8 @@
+//  TODOs:
+//    Add GUI to add/remove shapes and adjust their colors and other properties
+//    Add Bezier curves as an option
+//    Try and maybe do some kind of perspective stuff like in did in starfield
+
 const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;
