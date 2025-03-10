@@ -1,5 +1,77 @@
 import * as THREE from 'three';
 
+
+
+
+
+// const xmax = 100;
+// const xmin = -100;
+// const ymax = 100;
+// const ymin = -100;
+// const zmax = 100;
+// const zmin = -100;
+
+// function validCoords(coords) {
+// 	return coords.x <= xmax && coords.x >= xmin && coords.y <= ymax && coords.y >= ymin && coords.z <= zmax && coords.z >= zmin
+// }
+
+const dirs = [
+	{x: 1, y: 0, z: 0},
+	{x: -1, y: 0, z: 0},
+	{x: 0, y: 1, z: 0},
+	{x: 0, y: -1, z: 0},
+	{x: 0, y: 0, z: 1},
+	{x: 0, y: 0, z: -1}
+]
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function getRandomNonZeroInt(max) {
+  return Math.floor(Math.random() * max) + 1;
+}
+
+class PipeRun {
+	constructor() {
+		// this.materialargs = materialargs;
+		this.maxlength = 100;
+		this.startpos = {x: 0, y: 0, z: 0};
+		this.visited = new Set();
+		this.path = [];
+	}
+
+	generatePath() {
+		let cur = this.startpos;
+		while (this.maxlength > 0) {
+			this.visited.add(JSON.stringify(cur));
+			this.path.push(cur);
+			shuffleArray(dirs);
+			let l = 3; // getRandomNonZeroInt(4); We can do this... but we need to ensure that a pipe cant go back on itself
+			let i = 0;
+			let nextdir = dirs[i];
+			let nextpos = {x: cur.x + (nextdir.x * l), y: cur.y + (nextdir.y * l), z: cur.z + (nextdir.z * l)};
+			// while ( !validCoords(nextpos) || this.visited.has(JSON.stringify(nextpos)) ) {
+			while ( this.visited.has(JSON.stringify(nextpos)) ) {
+				i += 1;
+				nextdir = dirs[i];
+				nextpos = {x: cur.x + (nextdir.x * l), y: cur.y + (nextdir.y * l), z: cur.z + (nextdir.z * l)}; // dont repeat this
+			}
+			cur = nextpos;
+			this.maxlength -= 1;
+		}
+	}
+}
+
+
+
+
+
+
 const renderer = new THREE.WebGLRenderer();
 const viewport = document.querySelector("#mainCanvas");
 renderer.setSize( viewport.clientWidth, viewport.clientHeight );
@@ -59,10 +131,28 @@ const testpipes = [
 	),
 ];
 
-const mycurvepath = new THREE.CurvePath();
-for (let i = 0; i < testpipes.length; i++) {
-	mycurvepath.curves.push(testpipes[i])
+function pointPathToStraightSegmentCurvePath(arr) {
+	let curvePath = new THREE.CurvePath();
+	for (let i = 0; i < (arr.length - 1); i++) {
+		curvePath.curves.push(
+			new THREE.LineCurve3(
+				new THREE.Vector3(arr[i].x, arr[i].y, arr[i].z),
+				new THREE.Vector3(arr[i + 1].x, arr[i + 1].y, arr[i + 1].z)
+			)
+		)
+	}
+	console.log(curvePath);
+	return curvePath
 }
+
+const myPipeRun = new PipeRun()
+myPipeRun.generatePath()
+const mycurvepath = pointPathToStraightSegmentCurvePath(myPipeRun.path);
+
+// const mycurvepath = new THREE.CurvePath();
+// for (let i = 0; i < testpipes.length; i++) {
+// 	mycurvepath.curves.push(testpipes[i])
+// }
 
 const materialargs = {
 	color: 0xffffff,
@@ -72,7 +162,7 @@ const materialargs = {
 };
 
 const material = new THREE.MeshPhongMaterial( materialargs );
-const geometry = new THREE.TubeGeometry(mycurvepath, 256, 1, 8, false);
+const geometry = new THREE.TubeGeometry(mycurvepath, 512, 0.5, 8, false);
 const mesh = new THREE.Mesh( geometry, material );
 scene.add(mesh);
 
@@ -91,4 +181,6 @@ function animate() {
 	renderer.render( scene, camera );
 }
 
-renderer.setAnimationLoop( animate );
+window.onload = function() {
+  renderer.setAnimationLoop( animate );
+};
