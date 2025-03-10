@@ -6,8 +6,8 @@ renderer.setSize( viewport.clientWidth, viewport.clientHeight );
 viewport.appendChild( renderer.domElement );
 
 const camera = new THREE.PerspectiveCamera( 45, viewport.clientWidth / viewport.clientHeight, 1, 500 );
+camera.position.set(10,5,50);
 camera.lookAt(0,0,0);
-camera.position.set(0,0,50);
 
 const scene = new THREE.Scene();
 
@@ -81,11 +81,9 @@ const totalIndices = geometry.index.count; // ~ tubeSegments * radial segments *
 const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 
 function animate() {
-	
-	renderedIndices += speed;
 
-	if (renderedIndices > totalIndices) {
-		renderedIndices = totalIndices;
+	if (renderedIndices < totalIndices) {
+		renderedIndices += speed;
 	}
 
 	geometry.setDrawRange(0, Math.floor(renderedIndices));
