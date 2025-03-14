@@ -113,7 +113,7 @@ light.position.set( 100, 100, 100 );
 scene.add( light );
 scene.add( new THREE.AmbientLight( 0x777777 ) );
 
-const materialargs = {
+const materialargs1 = {
 	color: 0xff0000,
 	specular: 0x050505,
 	shininess: 500,
@@ -134,16 +134,43 @@ const materialargs3 = {
 	emissive: 0x000000
 };
 
-const myPipeRun = new PipeRun(materialargs, 100, {x: -5, y: -5, z: -5});
-const myPipeRun2 = new PipeRun(materialargs2, 100, {x: 5, y: 5, z: 5});
-const myPipeRun3 = new PipeRun(materialargs3, 100, {x: 0, y: 0, z: 0});
+const materialargs4 = {
+	color: 0xffff00,
+	specular: 0x050505,
+	shininess: 500,
+	emissive: 0x000000
+};
 
-scene.add(myPipeRun.mesh);
+const materialargs5 = {
+	color: 0x00ffff,
+	specular: 0x050505,
+	shininess: 500,
+	emissive: 0x000000
+};
+
+const materialargs6 = {
+	color: 0xff00ff,
+	specular: 0x050505,
+	shininess: 500,
+	emissive: 0x000000
+};
+
+const myPipeRun1 = new PipeRun(materialargs1, 100, {x: -5, y: -5, z: -5});
+const myPipeRun2 = new PipeRun(materialargs2, 100, {x: 5, y: 5, z: 5});
+const myPipeRun3 = new PipeRun(materialargs3, 100, {x: -5, y: 5, z: -5});
+const myPipeRun4 = new PipeRun(materialargs4, 100, {x: 5, y: -5, z: 5});
+const myPipeRun5 = new PipeRun(materialargs5, 100, {x: 5, y: 5, z: -5});
+const myPipeRun6 = new PipeRun(materialargs6, 100, {x: -5, y: 5, z: 5});
+
+scene.add(myPipeRun1.mesh);
 scene.add(myPipeRun2.mesh);
 scene.add(myPipeRun3.mesh);
+scene.add(myPipeRun4.mesh);
+scene.add(myPipeRun5.mesh);
+scene.add(myPipeRun6.mesh);
 
 let renderedIndices = 0;
-const totalIndices = myPipeRun.geometry.index.count; // ~ tubeSegments * radial segments * 6
+const totalIndices = myPipeRun1.geometry.index.count; // ~ tubeSegments * radial segments * 6
 const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 
 function animate() {
@@ -152,9 +179,12 @@ function animate() {
 		renderedIndices += speed;
 	}
 
-	myPipeRun.geometry.setDrawRange(0, Math.floor(renderedIndices));
+	myPipeRun1.geometry.setDrawRange(0, Math.floor(renderedIndices));
 	myPipeRun2.geometry.setDrawRange(0, Math.floor(renderedIndices));
 	myPipeRun3.geometry.setDrawRange(0, Math.floor(renderedIndices));
+	myPipeRun4.geometry.setDrawRange(0, Math.floor(renderedIndices));
+	myPipeRun5.geometry.setDrawRange(0, Math.floor(renderedIndices));
+	myPipeRun6.geometry.setDrawRange(0, Math.floor(renderedIndices));
 
 	renderer.render( scene, camera );
 }
