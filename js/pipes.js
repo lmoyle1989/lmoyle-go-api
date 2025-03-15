@@ -24,8 +24,8 @@ function getRandomInt(max) {
 }
 
 class PipeRun {
-	constructor(maxLength, startPos, parentPipeGroup) {
-		this.visited = parentPipeGroup.visited
+	constructor(maxLength, startPos, visited) {
+		this.visited = visited
 		this.maxLength = maxLength;
 		this.startPos = startPos; // there is an edge case where a pipe can go though another's startPos because its hardcoded rn and not checked in the visted mapx
 		this.materialargs = {
@@ -134,19 +134,23 @@ class PipeGroup {
 		this.visited = new Set();
 		// Definitely make the start position bit better and not hardcoded
 		this.startPositions = [
-			{x: -5, y: -5, z: -5},
-			{x: 5, y: 5, z: 5},
-			{x: -5, y: 5, z: -5},
-			{x: 5, y: -5, z: 5}
+			{x: 10, y: 0, z: 0},
+			{x: -10, y: 0, z: 0},
+			{x: 0, y: 10, z: 0},
+			{x: 0, y: -10, z: 0},
+			{x: 0, y: 0, z: 10},
+			{x: 0, y: 0, z: -10}
 		];
 		for (let i = 0; i < this.startPositions.length; i ++) {
 			this.visited.add(JSON.stringify(this.startPositions[i]));
 		}
 		this.pipes = [
-			new PipeRun(100, this.startPositions[0], this),
-			new PipeRun(100, this.startPositions[1], this),
-			new PipeRun(100, this.startPositions[2], this),
-			new PipeRun(100, this.startPositions[3], this)
+			new PipeRun(100, this.startPositions[0], this.visited),
+			new PipeRun(100, this.startPositions[1], this.visited),
+			new PipeRun(100, this.startPositions[2], this.visited),
+			new PipeRun(100, this.startPositions[3], this.visited),
+			new PipeRun(100, this.startPositions[4], this.visited),
+			new PipeRun(100, this.startPositions[5], this.visited)
 		];
 		for ( let i = 0; i < this.pipes.length; i++ ) {
 			this.group.add(this.pipes[i].group);
@@ -162,19 +166,19 @@ class PipeGroup {
 
 const renderer = new THREE.WebGLRenderer();
 const viewport = document.querySelector("#mainCanvas");
-renderer.setSize( viewport.clientWidth, viewport.clientHeight );
-viewport.appendChild( renderer.domElement );
+renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+viewport.appendChild(renderer.domElement);
 
-const camera = new THREE.PerspectiveCamera( 45, viewport.clientWidth / viewport.clientHeight, 1, 500 );
-camera.position.set(10,5,50);
+const camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 1, 500);
+camera.position.set(10,5,100);
 camera.lookAt(0,0,0);
 
 const scene = new THREE.Scene();
 
-const light = new THREE.DirectionalLight( 0xffffff, 3 );
-light.position.set( 100, 100, 100 );
-scene.add( light );
-scene.add( new THREE.AmbientLight( 0x777777 ) );
+const light = new THREE.DirectionalLight(0xffffff, 3);
+light.position.set(100, 100, 100);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0x777777));
 
 let renderedPipeGroup;
 // This stuff should be moved inside the PipeRun class
@@ -191,6 +195,8 @@ function animate() {
 		renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
 	}
 	renderedPipeGroup.group.rotation.y += 0.005;
+	renderedPipeGroup.group.rotation.x += 0.0025;
+	renderedPipeGroup.group.rotation.z += 0.001;
 
 	renderer.render(scene, camera);
 }
