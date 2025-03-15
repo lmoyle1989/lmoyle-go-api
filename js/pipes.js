@@ -3,7 +3,7 @@
 //	2. Make the pipe runs animate in sequence, potentially, instead of all at the same time
 //	3. Variable pipe run length
 //	4. Hide the unrendered pipe ends somehow
-//	5. Make the animation start and pause buttons work
+//	5. 
 //	6. Number of pipes in pipegroup should be dynamic and randomize start positions
 //	7. straightness controls
 //	8. Fix bug when a pipe run gets stuck in a infinite loop
@@ -119,6 +119,12 @@ class PipeRun {
 		this.group.add(this.pipeMesh);
 		this.group.add(this.startSphereMesh);
 	}
+
+	cleanup() {
+		this.material.dispose();
+		this.startSphereGeometry.dispose();
+		this.pipeGeometry.dispose();
+	}
 }
 
 class PipeGroup {
@@ -133,6 +139,12 @@ class PipeGroup {
 		this.group = new THREE.Group();
 		for ( let i = 0; i < this.pipes.length; i++ ) {
 			this.group.add(this.pipes[i].group);
+		}
+	}
+
+	cleanup() {
+		for ( let i = 0; i < this.pipes.length; i++ ) {
+			this.pipes[i].cleanup()
 		}
 	}
 }
@@ -187,6 +199,11 @@ function startAnimation() {
 }
 
 function resetAnimation() {
+	scene.remove(renderedPipeGroup.group);
+	renderedPipeGroup.cleanup();
+	renderedPipeGroup = new PipeGroup();
+	renderedIndices = 0
+	scene.add(renderedPipeGroup.group);
 }
 
 function pipesInit() {
