@@ -137,8 +137,6 @@ class PipeGroup {
 	}
 }
 
-const myPipeGroup = new PipeGroup();
-
 const renderer = new THREE.WebGLRenderer();
 const viewport = document.querySelector("#mainCanvas");
 renderer.setSize( viewport.clientWidth, viewport.clientHeight );
@@ -155,11 +153,12 @@ light.position.set( 100, 100, 100 );
 scene.add( light );
 scene.add( new THREE.AmbientLight( 0x777777 ) );
 
-scene.add(myPipeGroup.group);
+let renderedPipeGroup = new PipeGroup();
+scene.add(renderedPipeGroup.group);
 
 // This should be moved inside the PipeRun class
 let renderedIndices = 0;
-const totalIndices = myPipeGroup.pipes[0].pipeGeometry.index.count; // ~ tubeSegments * radial segments * 6
+const totalIndices = renderedPipeGroup.pipes[0].pipeGeometry.index.count; // ~ tubeSegments * radial segments * 6
 const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 
 function animate() {
@@ -167,15 +166,32 @@ function animate() {
 		renderedIndices += speed;
 	}
 
-	for ( let i = 0; i < myPipeGroup.pipes.length; i++) {
-		myPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
+	for ( let i = 0; i < renderedPipeGroup.pipes.length; i++) {
+		renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
 	}
+	renderedPipeGroup.group.rotation.y += 0.005;
 
-	myPipeGroup.group.rotation.y += 0.005;
-
-	renderer.render( scene, camera );
+	renderer.render(scene, camera);
 }
 
 window.onload = function() {
-  renderer.setAnimationLoop( animate );
+	pipesInit();
 };
+
+function pauseAnimation() {
+	renderer.setAnimationLoop(null);
+}
+
+function startAnimation() {
+	renderer.setAnimationLoop(animate);
+}
+
+function resetAnimation() {
+}
+
+function pipesInit() {
+  startButton.addEventListener("click", startAnimation);
+  pauseButton.addEventListener("click", pauseAnimation);
+  resetButton.addEventListener("click", resetAnimation);
+  startAnimation();
+}
