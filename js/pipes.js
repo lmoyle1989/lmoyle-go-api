@@ -3,7 +3,7 @@
 //	2. Make the pipe runs animate in sequence, potentially, instead of all at the same time
 //	3. Variable pipe run length
 //	4. Hide the unrendered pipe ends somehow
-//	5. 
+//	5. camera controls?
 //	6. Number of pipes in pipegroup should be dynamic and randomize start positions
 //	7. straightness controls
 //	8. Fix bug when a pipe run gets stuck in a infinite loop
@@ -52,6 +52,7 @@ class PipeRun {
 		while ( step <= this.maxLength ) {
 			lastdir = nextdir;
 			do {
+				// FIX ME: if a pipe makes it to a point where all the dirs it can go are visited, this will get stuck in an infinite loop
 				nextdir = dirs[getRandomInt(dirs.length)];
 				nextpos = {
 					x: curpos.x + (nextdir.x * l),
@@ -64,7 +65,7 @@ class PipeRun {
 			}
 			this.visited.add(JSON.stringify(curpos));
 			this.path.push(curpos);
-			if ( this.maxLength != 0 ) {
+			if ( this.step != this.maxLength ) {
 				for ( let j = 1; j < l; j++ ) {
 					this.path.push({
 						x: curpos.x + (nextdir.x * j),
@@ -129,14 +130,24 @@ class PipeRun {
 
 class PipeGroup {
 	constructor() {
-		this.visited = new Set();
-		this.pipes = [
-			new PipeRun(100, {x: -5, y: -5, z: -5}, this),
-			new PipeRun(100, {x: 5, y: 5, z: 5}, this),
-			new PipeRun(100, {x: -5, y: 5, z: -5}, this),
-			new PipeRun(100, {x: 5, y: -5, z: 5}, this)
-		];
 		this.group = new THREE.Group();
+		this.visited = new Set();
+		// Definitely make the start position bit better and not hardcoded
+		this.startPositions = [
+			{x: -5, y: -5, z: -5},
+			{x: 5, y: 5, z: 5},
+			{x: -5, y: 5, z: -5},
+			{x: 5, y: -5, z: 5}
+		];
+		for (let i = 0; i < this.startPositions.length; i ++) {
+			this.visited.add(JSON.stringify(this.startPositions[i]));
+		}
+		this.pipes = [
+			new PipeRun(100, this.startPositions[0], this),
+			new PipeRun(100, this.startPositions[1], this),
+			new PipeRun(100, this.startPositions[2], this),
+			new PipeRun(100, this.startPositions[3], this)
+		];
 		for ( let i = 0; i < this.pipes.length; i++ ) {
 			this.group.add(this.pipes[i].group);
 		}
@@ -165,12 +176,10 @@ light.position.set( 100, 100, 100 );
 scene.add( light );
 scene.add( new THREE.AmbientLight( 0x777777 ) );
 
-let renderedPipeGroup = new PipeGroup();
-scene.add(renderedPipeGroup.group);
-
-// This should be moved inside the PipeRun class
-let renderedIndices = 0;
-const totalIndices = renderedPipeGroup.pipes[0].pipeGeometry.index.count; // ~ tubeSegments * radial segments * 6
+let renderedPipeGroup;
+// This stuff should be moved inside the PipeRun class
+let renderedIndices;
+let totalIndices; // ~ tubeSegments * radial segments * 6
 const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 
 function animate() {
@@ -199,9 +208,12 @@ function startAnimation() {
 }
 
 function resetAnimation() {
-	scene.remove(renderedPipeGroup.group);
-	renderedPipeGroup.cleanup();
+	if (renderedPipeGroup) {
+		scene.remove(renderedPipeGroup.group);
+		renderedPipeGroup.cleanup();
+	}
 	renderedPipeGroup = new PipeGroup();
+	totalIndices = renderedPipeGroup.pipes[0].pipeGeometry.index.count; // should do this on a per pipe basis
 	renderedIndices = 0
 	scene.add(renderedPipeGroup.group);
 }
@@ -210,5 +222,5 @@ function pipesInit() {
   startButton.addEventListener("click", startAnimation);
   pauseButton.addEventListener("click", pauseAnimation);
   resetButton.addEventListener("click", resetAnimation);
-  startAnimation();
+	resetAnimation();
 }
