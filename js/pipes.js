@@ -6,7 +6,6 @@
 //	5. camera controls?
 //	6. Number of pipes in pipegroup should be dynamic and randomize start positions
 //	7. straightness controls
-//	8. Fix bug when a pipe run gets stuck in a infinite loop
 
 import * as THREE from 'three';
 
@@ -59,8 +58,14 @@ class PipeRun {
 		let lastdir;
 		let finished = false;
 		const l = 5;
+		const straightness = 1;
 		while ( step <= this.maxLength ) {
 			let dirs = directions.slice();
+			if (lastdir) {
+				for (let i = 0; i < straightness; i++) {
+					dirs.push(lastdir);
+				}
+			}
 			shuffleArray(dirs)
 			do {
 				if (dirs.length) {
