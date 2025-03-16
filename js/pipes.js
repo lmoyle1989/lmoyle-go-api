@@ -1,11 +1,9 @@
 //	TODOs:
 //	1. Make the animation less janky insofar as getting the renderedVertices inside the PipeGroup class
 //	2. Make the pipe runs animate in sequence, potentially, instead of all at the same time
-//	3. Variable pipe run length
 //	4. Hide the unrendered pipe ends somehow
 //	5. camera controls?
 //	6. Number of pipes in pipegroup should be dynamic and randomize start positions
-//	7. straightness controls
 
 import * as THREE from 'three';
 
@@ -36,6 +34,8 @@ class PipeRun {
 		this.visited = visited
 		this.maxLength = maxLength;
 		this.startPos = startPos;
+		this.totalIndices = 0;
+		this.renderedIndices = 0;
 		this.materialargs = {
 			color: getRandomInt(256 ** 3),
 			specular: 0x050505,
@@ -58,11 +58,11 @@ class PipeRun {
 		let lastdir;
 		let finished = false;
 		const l = 5;
-		const straightness = 1;
+		const straightness = 2;
 		while ( step <= this.maxLength ) {
 			let dirs = directions.slice();
 			if (lastdir) {
-				for (let i = 0; i < straightness; i++) {
+				for ( let i = 0; i < straightness; i++ ) {
 					dirs.push(lastdir);
 				}
 			}
@@ -144,6 +144,7 @@ class PipeRun {
 		if (this.curvePath.curves.length > 1) {
 			this.pipeGeometry = new THREE.TubeGeometry(this.curvePath, 16 * this.maxLength, 0.5, 8, false);
 			this.pipeMesh = new THREE.Mesh(this.pipeGeometry, this.material);
+			this.totalIndices = this.pipeGeometry.index.count; // = tubeSegments * radial segments * 6
 			this.group.add(this.pipeMesh);
 		}
 	}
@@ -161,7 +162,6 @@ class PipeGroup {
 	constructor() {
 		this.group = new THREE.Group();
 		this.visited = new Set();
-		// Definitely make the start position bit better and not hardcoded
 		this.startPositions = [
 			{x: 10, y: 0, z: 0},
 			{x: -10, y: 0, z: 0},
@@ -210,21 +210,16 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0x777777));
 
 let renderedPipeGroup;
-// This stuff should be moved inside the PipeRun class
-let renderedIndices;
-let totalIndices; // ~ tubeSegments * radial segments * 6
 const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 
 function animate() {
-	if (renderedIndices < totalIndices) {
-		renderedIndices += speed;
-	}
-
 	for ( let i = 0; i < renderedPipeGroup.pipes.length; i++) {
-		if (renderedPipeGroup.pipes[i].pipeGeometry) {
-			renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
+		if (renderedPipeGroup.pipes[i].renderedIndices < renderedPipeGroup.pipes[i].totalIndices) {
+			renderedPipeGroup.pipes[i].renderedIndices += speed;
+			renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedPipeGroup.pipes[i].renderedIndices));
 		}
 	}
+
 	renderedPipeGroup.group.rotation.y += 0.005;
 	renderedPipeGroup.group.rotation.x += 0.0025;
 	renderedPipeGroup.group.rotation.z += 0.001;
@@ -250,8 +245,6 @@ function resetAnimation() {
 		renderedPipeGroup.cleanup();
 	}
 	renderedPipeGroup = new PipeGroup();
-	totalIndices = renderedPipeGroup.pipes[0].pipeGeometry.index.count; // should do this on a per pipe basis
-	renderedIndices = 0
 	scene.add(renderedPipeGroup.group);
 }
 
