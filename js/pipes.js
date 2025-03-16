@@ -10,7 +10,7 @@
 
 import * as THREE from 'three';
 
-const dirs = [
+const directions = [
 	{x: 1, y: 0, z: 0},
 	{x: -1, y: 0, z: 0},
 	{x: 0, y: 1, z: 0},
@@ -23,11 +23,20 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
+function shuffleArray(array) {
+	for (var i = array.length - 1; i >= 0; i--) {
+			var j = Math.floor(Math.random() * (i + 1));
+			var temp = array[i];
+			array[i] = array[j];
+			array[j] = temp;
+	}
+}
+
 class PipeRun {
 	constructor(maxLength, startPos, visited) {
 		this.visited = visited
 		this.maxLength = maxLength;
-		this.startPos = startPos; // there is an edge case where a pipe can go though another's startPos because its hardcoded rn and not checked in the visted mapx
+		this.startPos = startPos;
 		this.materialargs = {
 			color: getRandomInt(256 ** 3),
 			specular: 0x050505,
@@ -48,23 +57,33 @@ class PipeRun {
 		let nextdir;
 		let nextpos;
 		let lastdir;
+		let finished = false;
 		const l = 5;
 		while ( step <= this.maxLength ) {
-			lastdir = nextdir;
+			let dirs = directions.slice();
+			shuffleArray(dirs)
 			do {
-				// FIX ME: if a pipe makes it to a point where all the dirs it can go are visited, this will get stuck in an infinite loop
-				nextdir = dirs[getRandomInt(dirs.length)];
+				if (dirs.length) {
+					nextdir = dirs.pop();
+				}
+				else {
+					finished = true;
+					break;
+				}
 				nextpos = {
 					x: curpos.x + (nextdir.x * l),
 					y: curpos.y + (nextdir.y * l),
 					z: curpos.z + (nextdir.z * l)
 				};
-			} while ( this.visited.has(JSON.stringify(nextpos)) );
+			} while (this.visited.has(JSON.stringify(nextpos)));
+			this.visited.add(JSON.stringify(curpos));
+			this.path.push(curpos);
+			if (finished) {
+				break;
+			}
 			if (!(lastdir === nextdir)) {
 				this.elbows.push(step * l)
 			}
-			this.visited.add(JSON.stringify(curpos));
-			this.path.push(curpos);
 			if ( this.step != this.maxLength ) {
 				for ( let j = 1; j < l; j++ ) {
 					this.path.push({
@@ -74,6 +93,7 @@ class PipeRun {
 					});
 				}
 			}
+			lastdir = nextdir;
 			curpos = nextpos;
 			step += 1;
 		}
@@ -107,24 +127,28 @@ class PipeRun {
 	}
 
 	generateMesh() {
+		this.group = new THREE.Group();
+		
 		this.material = new THREE.MeshPhongMaterial(this.materialargs);
 		
 		this.startSphereGeometry = new THREE.SphereGeometry(0.75, 32, 16);
 		this.startSphereMesh = new THREE.Mesh(this.startSphereGeometry, this.material);
 		this.startSphereMesh.position.set(this.startPos.x, this.startPos.y, this.startPos.z);
-		
-		this.pipeGeometry = new THREE.TubeGeometry(this.curvePath, 16 * this.maxLength, 0.5, 8, false);
-		this.pipeMesh = new THREE.Mesh(this.pipeGeometry, this.material);
-
-		this.group = new THREE.Group();
-		this.group.add(this.pipeMesh);
 		this.group.add(this.startSphereMesh);
+		
+		if (this.curvePath.curves.length > 1) {
+			this.pipeGeometry = new THREE.TubeGeometry(this.curvePath, 16 * this.maxLength, 0.5, 8, false);
+			this.pipeMesh = new THREE.Mesh(this.pipeGeometry, this.material);
+			this.group.add(this.pipeMesh);
+		}
 	}
 
 	cleanup() {
 		this.material.dispose();
 		this.startSphereGeometry.dispose();
-		this.pipeGeometry.dispose();
+		if (this.pipeGeometry) {
+			this.pipeGeometry.dispose();
+		}
 	}
 }
 
@@ -192,7 +216,9 @@ function animate() {
 	}
 
 	for ( let i = 0; i < renderedPipeGroup.pipes.length; i++) {
-		renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
+		if (renderedPipeGroup.pipes[i].pipeGeometry) {
+			renderedPipeGroup.pipes[i].pipeGeometry.setDrawRange(0, Math.floor(renderedIndices));
+		}
 	}
 	renderedPipeGroup.group.rotation.y += 0.005;
 	renderedPipeGroup.group.rotation.x += 0.0025;

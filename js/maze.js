@@ -9,9 +9,6 @@ const canvas = document.querySelector("#mainCanvas");
 const ctx = canvas.getContext("2d");
 const height = canvas.height;
 const width = canvas.width;
-const pauseButton = document.querySelector("#pauseButton");
-const startButton = document.querySelector("#startButton");
-const resetButton = document.querySelector("#resetButton");
 const dirMap = {
   "1,0": 270,
   "0,1": 180,
