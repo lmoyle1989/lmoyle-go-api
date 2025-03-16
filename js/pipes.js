@@ -1,9 +1,7 @@
 //	TODOs:
-//	1. Make the animation less janky insofar as getting the renderedVertices inside the PipeGroup class
-//	2. Make the pipe runs animate in sequence, potentially, instead of all at the same time
-//	4. Hide the unrendered pipe ends somehow
-//	5. camera controls?
-//	6. Number of pipes in pipegroup should be dynamic and randomize start positions
+//	1. Make the pipe runs animate in sequence, potentially, instead of all at the same time
+//	2. Hide the unrendered pipe ends with another sphere
+//	3. camera controls?
 
 import * as THREE from 'three';
 
@@ -20,6 +18,12 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
+function getRandomIntInclusive(min, max) {
+  const minCeiled = Math.ceil(min);
+  const maxFloored = Math.floor(max);
+  return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
+}
+
 function shuffleArray(array) {
 	for (var i = array.length - 1; i >= 0; i--) {
 			var j = Math.floor(Math.random() * (i + 1));
@@ -30,10 +34,11 @@ function shuffleArray(array) {
 }
 
 class PipeRun {
-	constructor(maxLength, startPos, visited) {
+	constructor(maxLength, startPos, visited, gridSize) {
 		this.visited = visited
 		this.maxLength = maxLength;
 		this.startPos = startPos;
+		this.gridSize = gridSize;
 		this.totalIndices = 0;
 		this.renderedIndices = 0;
 		this.materialargs = {
@@ -57,7 +62,7 @@ class PipeRun {
 		let nextpos;
 		let lastdir;
 		let finished = false;
-		const l = 5;
+		const l = this.gridSize;
 		const straightness = 2;
 		while ( step <= this.maxLength ) {
 			let dirs = directions.slice();
@@ -159,31 +164,36 @@ class PipeRun {
 }
 
 class PipeGroup {
-	constructor() {
+	constructor(pipeCount) {
 		this.group = new THREE.Group();
 		this.visited = new Set();
-		this.startPositions = [
-			{x: 10, y: 0, z: 0},
-			{x: -10, y: 0, z: 0},
-			{x: 0, y: 10, z: 0},
-			{x: 0, y: -10, z: 0},
-			{x: 0, y: 0, z: 10},
-			{x: 0, y: 0, z: -10}
-		];
-		for (let i = 0; i < this.startPositions.length; i ++) {
-			this.visited.add(JSON.stringify(this.startPositions[i]));
+		this.gridSize = 5;
+		this.startPositions = [];
+		this.pipes = [];
+		for (let i = 0; i < pipeCount; i++) {
+			this.startPositions.push(this.generateRandomStartPos());
 		}
-		this.pipes = [
-			new PipeRun(100, this.startPositions[0], this.visited),
-			new PipeRun(100, this.startPositions[1], this.visited),
-			new PipeRun(100, this.startPositions[2], this.visited),
-			new PipeRun(100, this.startPositions[3], this.visited),
-			new PipeRun(100, this.startPositions[4], this.visited),
-			new PipeRun(100, this.startPositions[5], this.visited)
-		];
-		for ( let i = 0; i < this.pipes.length; i++ ) {
+		for (let i = 0; i < pipeCount; i++) {
+			this.pipes.push(new PipeRun(this.generateRandomLength(), this.startPositions[i], this.visited, this.gridSize));
 			this.group.add(this.pipes[i].group);
 		}
+	}
+
+	generateRandomStartPos() {
+		let startPos;
+		do {
+			startPos = {
+				x: getRandomIntInclusive(-5, 5) * this.gridSize,
+				y: getRandomIntInclusive(-5, 5) * this.gridSize,
+				z: getRandomIntInclusive(-5, 5) * this.gridSize
+			};
+		} while (this.visited.has(JSON.stringify(startPos)))
+		this.visited.add(JSON.stringify(startPos));
+		return startPos
+	}
+
+	generateRandomLength() {
+		return getRandomIntInclusive(100, 200);
 	}
 
 	cleanup() {
@@ -244,7 +254,7 @@ function resetAnimation() {
 		scene.remove(renderedPipeGroup.group);
 		renderedPipeGroup.cleanup();
 	}
-	renderedPipeGroup = new PipeGroup();
+	renderedPipeGroup = new PipeGroup(6);
 	scene.add(renderedPipeGroup.group);
 }
 
