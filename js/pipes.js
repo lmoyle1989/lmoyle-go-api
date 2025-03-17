@@ -8,6 +8,8 @@
 //	7. the end conditions and end position are kinda jank and don't lie on the grid, and sometimes just skips the last segment
 //	8. cleanup code: add all the scene setup stuff into its own function
 //	9. add interface to control number of pipes? or other global params?
+//	10. hex 3d dirs
+
 
 import * as THREE from 'three';
 
@@ -19,6 +21,38 @@ const directions = [
 	{x: 0, y: 0, z: 1},
 	{x: 0, y: 0, z: -1}
 ]
+
+// const moreDirections = [
+// 	{x: 1, y: 0, z: 0},
+// 	{x: 1, y: 0, z: 1},
+// 	{x: 1, y: 0, z: -1},
+// 	{x: -1, y: 0, z: 0},
+// 	{x: -1, y: 0, z: 1},
+// 	{x: -1, y: 0, z: -1},
+// 	{x: 0, y: 0, z: 1},
+// 	{x: 0, y: 0, z: -1},
+// 	//
+// 	{x: 1, y: 1, z: 0},
+// 	{x: 1, y: 1, z: 1},
+// 	{x: 1, y: 1, z: -1},
+// 	{x: -1, y: 1, z: 0},
+// 	{x: -1, y: 1, z: 1},
+// 	{x: -1, y: 1, z: -1},
+// 	{x: 0, y: 1, z: 1},
+// 	{x: 0, y: 1, z: -1},
+// 	//
+// 	{x: 1, y: -1, z: 0},
+// 	{x: 1, y: -1, z: 1},
+// 	{x: 1, y: -1, z: -1},
+// 	{x: -1, y: -1, z: 0},
+// 	{x: -1, y: -1, z: 1},
+// 	{x: -1, y: -1, z: -1},
+// 	{x: 0, y: -1, z: 1},
+// 	{x: 0, y: -1, z: -1},
+// 	//
+// 	{x: 0, y: 1, z: 0},
+// 	{x: 0, y: -1, z: 0}
+// ];
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -197,9 +231,9 @@ class PipeGroup {
 		let startPos;
 		do {
 			startPos = {
-				x: getRandomIntInclusive(-5, 5) * this.gridSize,
-				y: getRandomIntInclusive(-5, 5) * this.gridSize,
-				z: getRandomIntInclusive(-5, 5) * this.gridSize
+				x: getRandomIntInclusive(-10, 10) * this.gridSize,
+				y: getRandomIntInclusive(-10, 10) * this.gridSize,
+				z: getRandomIntInclusive(-10, 10) * this.gridSize
 			};
 		} while (this.visited.has(JSON.stringify(startPos)))
 		this.visited.add(JSON.stringify(startPos));
@@ -223,7 +257,7 @@ const viewport = document.querySelector("#mainCanvas");
 renderer.setSize(viewport.clientWidth, viewport.clientHeight);
 viewport.appendChild(renderer.domElement);
 
-const camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 1, 500);
+const camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 1, 1000);
 camera.position.set(10,5,100);
 camera.lookAt(0,0,0);
 
@@ -235,7 +269,7 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0x777777));
 
 let renderedPipeGroup;
-const speed = 48; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
+const speed = 96; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 									// total = tubeSegments * radial segments * 6
 
 function animate() {
@@ -279,8 +313,8 @@ function resetAnimation() {
 }
 
 function pipesInit() {
-  startButton.addEventListener("click", startAnimation);
-  pauseButton.addEventListener("click", pauseAnimation);
-  resetButton.addEventListener("click", resetAnimation);
+	startButton.addEventListener("click", startAnimation);
+	pauseButton.addEventListener("click", pauseAnimation);
+	resetButton.addEventListener("click", resetAnimation);
 	resetAnimation();
 }
