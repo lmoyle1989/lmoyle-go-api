@@ -13,6 +13,13 @@
 
 import * as THREE from 'three';
 
+const pipeCount = 20;
+const pipeMinLength = 200;
+const pipeMaxLength = 500;
+const globalStraightness = 10;
+const pipeSpawnAreaLimits = 20;
+const speedMultiplier = 2;
+
 const directions = [
 	{x: 1, y: 0, z: 0},
 	{x: -1, y: 0, z: 0},
@@ -59,9 +66,9 @@ function getRandomInt(max) {
 }
 
 function getRandomIntInclusive(min, max) {
-  const minCeiled = Math.ceil(min);
-  const maxFloored = Math.floor(max);
-  return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
+	const minCeiled = Math.ceil(min);
+	const maxFloored = Math.floor(max);
+	return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
 }
 
 function shuffleArray(array) {
@@ -103,7 +110,7 @@ class PipeRun {
 		let lastDir;
 		let deadEnd = false;
 		const l = this.gridSize;
-		const straightness = 2;
+		const straightness = globalStraightness;
 		while (step <= this.maxLength) {
 			let dirs = directions.slice();
 			if (lastDir) {
@@ -231,9 +238,9 @@ class PipeGroup {
 		let startPos;
 		do {
 			startPos = {
-				x: getRandomIntInclusive(-10, 10) * this.gridSize,
-				y: getRandomIntInclusive(-10, 10) * this.gridSize,
-				z: getRandomIntInclusive(-10, 10) * this.gridSize
+				x: getRandomIntInclusive(-pipeSpawnAreaLimits, pipeSpawnAreaLimits) * this.gridSize,
+				y: getRandomIntInclusive(-pipeSpawnAreaLimits, pipeSpawnAreaLimits) * this.gridSize,
+				z: getRandomIntInclusive(-pipeSpawnAreaLimits, pipeSpawnAreaLimits) * this.gridSize
 			};
 		} while (this.visited.has(JSON.stringify(startPos)))
 		this.visited.add(JSON.stringify(startPos));
@@ -242,7 +249,7 @@ class PipeGroup {
 	}
 
 	generateRandomLength() {
-		return getRandomIntInclusive(100, 200);
+		return getRandomIntInclusive(pipeMinLength, pipeMaxLength);
 	}
 
 	cleanup() {
@@ -258,7 +265,7 @@ renderer.setSize(viewport.clientWidth, viewport.clientHeight);
 viewport.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 1, 1000);
-camera.position.set(10,5,100);
+camera.position.set(10,5,200);
 camera.lookAt(0,0,0);
 
 const scene = new THREE.Scene();
@@ -269,7 +276,7 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0x777777));
 
 let renderedPipeGroup;
-const speed = 96; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
+const speed = 48 * speedMultiplier; // 48 is the number of indices that makes up a single tube segment with radialsegments = 8
 									// total = tubeSegments * radial segments * 6
 
 function animate() {
@@ -308,7 +315,7 @@ function resetAnimation() {
 		scene.remove(renderedPipeGroup.group);
 		renderedPipeGroup.cleanup();
 	}
-	renderedPipeGroup = new PipeGroup(10);
+	renderedPipeGroup = new PipeGroup(pipeCount);
 	scene.add(renderedPipeGroup.group);
 }
 
