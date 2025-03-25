@@ -4,23 +4,31 @@ const height = canvas.height;
 const width = canvas.width;
 let prevTime = 0;
 
+class OrbitalSystem {
+	constructor(satellites) {
+		this.satelliets = satellites
+	}
+}
+
 class GeometricOrbitalBody {
 	constructor(size, initialTheta, e, h, mu, omega) {
 		this.size = size // visual radius of the circle
-		this.theta = initialTheta; // true anomaly
+		this.theta = initialTheta - omega; // true anomaly; if initialTheta is 0, this will start at periapsis
 		this.e = e; // eccentricity
 		this.h = h; // specific relative angular momentum
 		this.mu = mu; // standard gravitational parameter
 		this.omega = omega; // argument of periapsis
-		this.p = (this.h ** 2) / this.mu; // semi-latus rectum
-
+		this.timer;
+		
 		this.updateOrbitRad();
 		this.updateCartesianPos();
 		this.calculateOrbitalEllipse();
+		this.calculateOrbitalPeriod();	
 	}
 	
 	updateOrbitRad() {
-		this.r = this.p / (1 + this.e * Math.cos(this.theta + this.omega));
+		this.p = (this.h ** 2) / this.mu; // semi-latus rectum
+		this.r = this.p / (1 + this.e * Math.cos(this.theta + this.omega)); // separation distance
 	}
 
 	updateCartesianPos() {
@@ -36,6 +44,14 @@ class GeometricOrbitalBody {
 		this.fy = -(this.a * this.e * Math.sin(this.majorAngle)); // focus position y
 	}
 
+	calculateOrbitalPeriod() {
+		this.period = 2 * Math.PI * Math.sqrt((this.a ** 3) / this.mu); // Kepler's law
+		// This factor, K, ensures that our orbit, after the dtheta step is modified by (1 / r^2(theta)), will take exactly the period to complete
+		// with help from chatgpt we're solving for K in this integral: ∫0->T ​(2π/T * (1 / (r^2(θ(t)))) ​* K) dt = 2π which turns into 2π/T * K * ∫0->T ​(1 / (r^2(θ(t))) = 2π
+		// then bc of specific angular momentum, dt = (r^2(θ) / h)dθ so ∫0->T 1 / r2(θ(t)) dt = ∫0->2π (1 / r^2(θ)) * (r^2(θ) / h) ​dθ = ∫0->2π ​1/h ​dθ = 2π / h​
+		this.k = (this.period * this.h) / (2 * Math.PI)
+	}
+
 	drawOrbitalEllipse(ctx) {
 		ctx.beginPath();
 		ctx.ellipse(this.fx, this.fy, this.a, this.b, this.majorAngle, 0, 2 * Math.PI);
@@ -49,7 +65,21 @@ class GeometricOrbitalBody {
 	}
 
 	updateFrame(ctx, step) {
-		this.theta += step * (10 / (this.r ** 2));
+		// dtheta = 
+		// (adjustment for simulation) *
+		// (deltaT in s) *
+		// (time normalization to ensure 2pi radians in a single period in seconds) *
+		// (rough approximation to make object slower at apoapsis and faster at periapsis) *
+		// (approximation adjustment to ensure period stays correct) 
+		const speedFactor = 1000;
+		const dtheta = speedFactor * (step / 1000) * (2 * Math.PI / this.period) * (1 / (this.r ** 2)) * this.k;
+		this.theta += dtheta;
+		// for debugging to period
+		// if (last_theta % (Math.PI * 2) > this.theta % (Math.PI * 2)) {
+		// 	console.log(this.theta % (Math.PI * 2));
+		// 	console.log(performance.now() - this.timer);
+		// 	this.timer = performance.now()
+		// }
 		this.updateOrbitRad();
 		this.updateCartesianPos();
 		this.drawOrbitalEllipse(ctx);
@@ -58,9 +88,9 @@ class GeometricOrbitalBody {
 }
 
 testBodies = [
-	new GeometricOrbitalBody(5, 0, 0.75, 8, 1, Math.PI / 4),
+	new GeometricOrbitalBody(5, 0, 0, 24, 10, 2 * Math.PI / 4),
 	new GeometricOrbitalBody(5, 0, 0.5, 12, 1, Math.PI),
-	new GeometricOrbitalBody(5, 0, 0.9, 10, 1, (3/2) * Math.PI)
+	new GeometricOrbitalBody(5, 0, 0.95, 10, 2, (3/2) * Math.PI)
 ];
 
 function drawFrame(timestamp) {
