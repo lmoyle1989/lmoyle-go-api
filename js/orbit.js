@@ -28,12 +28,12 @@ class GeometricOrbitalBody {
 	
 	updateOrbitRad() {
 		this.p = (this.h ** 2) / this.mu; // semi-latus rectum
-		this.r = this.p / (1 + this.e * Math.cos(this.theta + this.omega)); // separation distance
+		this.r = this.p / (1 + this.e * Math.cos(this.theta)); // separation distance
 	}
 
 	updateCartesianPos() {
-		this.px = this.r * Math.sin(this.theta);
-		this.py = this.r * Math.cos(this.theta);
+		this.px = this.r * Math.sin(this.theta + this.omega);
+		this.py = this.r * Math.cos(this.theta + this.omega);
 	}
 
 	calculateOrbitalEllipse() {
@@ -122,9 +122,9 @@ class GeometricOrbitalBody {
 }
 
 testBodies = [
-	new GeometricOrbitalBody(5, 0, 0.8, 24, 10, 0)
+	// new GeometricOrbitalBody(5, 0, 0.8, 24, 10, Math.PI),
 	// new GeometricOrbitalBody(5, 0, 0.5, 12, 1, Math.PI),
-	// new GeometricOrbitalBody(5, 0, 0.95, 10, 2, (3/2) * Math.PI)
+	new GeometricOrbitalBody(5, 0, 0.8, 10, 2, 3 * Math.PI / 2)
 ];
 
 function drawFrame(timestamp) {
