@@ -52,6 +52,27 @@ class GeometricOrbitalBody {
 		this.k = (this.period * this.h) / (2 * Math.PI)
 	}
 
+	keplersEquation(timestamp) {
+		const speedFactor = 1000;
+		const time = (timestamp / 1000) * speedFactor;
+		const meanAnomaly = ((2 * Math.PI) / this.period) * time;
+		const maxIterations = 10;
+		const minError = 0.000001;
+
+		let eccentricAnomaly = meanAnomaly
+		for (let i = 0; i < maxIterations; i++) {
+			const delta = (eccentricAnomaly - this.e * Math.sin(eccentricAnomaly) - meanAnomaly) / (1 - this.e * Math.cos(eccentricAnomaly));
+			eccentricAnomaly = eccentricAnomaly - delta;
+			if (Math.abs(delta) < minError) {
+				break;
+			}
+		}
+
+		const theta = 2 * Math.atan(Math.sqrt((1 + this.e) / (1 - this.e)) * Math.tan(eccentricAnomaly / 2))
+
+		return theta;
+	}
+
 	drawOrbitalEllipse(ctx) {
 		ctx.beginPath();
 		ctx.ellipse(this.fx, this.fy, this.a, this.b, this.majorAngle, 0, 2 * Math.PI);
@@ -64,22 +85,35 @@ class GeometricOrbitalBody {
 		ctx.fill();	
 	}
 
-	updateFrame(ctx, step) {
+	updateApproxFrame(ctx, step) {
+		// APROXIMATE:
 		// dtheta = 
 		// (adjustment for simulation) *
 		// (deltaT in s) *
 		// (time normalization to ensure 2pi radians in a single period in seconds) *
 		// (rough approximation to make object slower at apoapsis and faster at periapsis) *
 		// (approximation adjustment to ensure period stays correct) 
+
 		const speedFactor = 1000;
 		const dtheta = speedFactor * (step / 1000) * (2 * Math.PI / this.period) * (1 / (this.r ** 2)) * this.k;
 		this.theta += dtheta;
+
 		// for debugging to period
 		// if (last_theta % (Math.PI * 2) > this.theta % (Math.PI * 2)) {
 		// 	console.log(this.theta % (Math.PI * 2));
 		// 	console.log(performance.now() - this.timer);
 		// 	this.timer = performance.now()
 		// }
+		
+		this.updateOrbitRad();
+		this.updateCartesianPos();
+		this.drawOrbitalEllipse(ctx);
+		this.drawBody(ctx);
+	}
+
+	updateExactFrame(ctx, timestamp) {
+		this.theta = this.keplersEquation(timestamp);
+
 		this.updateOrbitRad();
 		this.updateCartesianPos();
 		this.drawOrbitalEllipse(ctx);
@@ -88,9 +122,9 @@ class GeometricOrbitalBody {
 }
 
 testBodies = [
-	new GeometricOrbitalBody(5, 0, 0, 24, 10, 2 * Math.PI / 4),
-	new GeometricOrbitalBody(5, 0, 0.5, 12, 1, Math.PI),
-	new GeometricOrbitalBody(5, 0, 0.95, 10, 2, (3/2) * Math.PI)
+	new GeometricOrbitalBody(5, 0, 0.8, 24, 10, 0)
+	// new GeometricOrbitalBody(5, 0, 0.5, 12, 1, Math.PI),
+	// new GeometricOrbitalBody(5, 0, 0.95, 10, 2, (3/2) * Math.PI)
 ];
 
 function drawFrame(timestamp) {
@@ -99,8 +133,11 @@ function drawFrame(timestamp) {
 	ctx.clearRect(-width / 2, -height / 2, width, height);
 	drawDot(ctx, 0, 0, 20);
 
+	// for (let i = 0; i < testBodies.length; i++) {
+	// 	testBodies[i].updateApproxFrame(ctx, step);
+	// }
 	for (let i = 0; i < testBodies.length; i++) {
-		testBodies[i].updateFrame(ctx, step);
+		testBodies[i].updateExactFrame(ctx, timestamp);
 	}
 	
 	prevTime = timestamp;
@@ -130,9 +167,9 @@ function canvasInit() {
 }
 
 function interfaceInit() {
-  startButton.addEventListener("click", startAnimation);
-  pauseButton.addEventListener("click", pauseAnimation);
-  resetButton.addEventListener("click", resetAnimation);
+	startButton.addEventListener("click", startAnimation);
+	pauseButton.addEventListener("click", pauseAnimation);
+	resetButton.addEventListener("click", resetAnimation);
 }
 
 window.onload = async function() {
