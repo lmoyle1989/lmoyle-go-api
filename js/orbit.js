@@ -46,10 +46,6 @@ class GeometricOrbitalBody {
 
 	calculateOrbitalPeriod() {
 		this.period = 2 * Math.PI * Math.sqrt((this.a ** 3) / this.mu); // Kepler's law
-		// This factor, K, ensures that our orbit, after the dtheta step is modified by (1 / r^2(theta)), will take exactly the period to complete
-		// with help from chatgpt we're solving for K in this integral: ∫0->T ​(2π/T * (1 / (r^2(θ(t)))) ​* K) dt = 2π which turns into 2π/T * K * ∫0->T ​(1 / (r^2(θ(t))) = 2π
-		// then bc of specific angular momentum, dt = (r^2(θ) / h)dθ so ∫0->T 1 / r2(θ(t)) dt = ∫0->2π (1 / r^2(θ)) * (r^2(θ) / h) ​dθ = ∫0->2π ​1/h ​dθ = 2π / h​
-		this.k = (this.period * this.h) / (2 * Math.PI)
 	}
 
 	keplersEquation(timestamp) {
@@ -85,34 +81,15 @@ class GeometricOrbitalBody {
 		ctx.fill();	
 	}
 
-	updateApproxFrame(ctx, step) {
-		// APROXIMATE:
-		// dtheta = 
-		// (adjustment for simulation) *
-		// (deltaT in s) *
-		// (time normalization to ensure 2pi radians in a single period in seconds) *
-		// (rough approximation to make object slower at apoapsis and faster at periapsis) *
-		// (approximation adjustment to ensure period stays correct) 
-
-		const speedFactor = 1000;
-		const dtheta = speedFactor * (step / 1000) * (2 * Math.PI / this.period) * (1 / (this.r ** 2)) * this.k;
-		this.theta += dtheta;
-
-		// for debugging to period
+	updateExactFrame(ctx, timestamp) {
+		this.theta = this.keplersEquation(timestamp);
+		
+		// for debugging the period
 		// if (last_theta % (Math.PI * 2) > this.theta % (Math.PI * 2)) {
 		// 	console.log(this.theta % (Math.PI * 2));
 		// 	console.log(performance.now() - this.timer);
 		// 	this.timer = performance.now()
 		// }
-		
-		this.updateOrbitRad();
-		this.updateCartesianPos();
-		this.drawOrbitalEllipse(ctx);
-		this.drawBody(ctx);
-	}
-
-	updateExactFrame(ctx, timestamp) {
-		this.theta = this.keplersEquation(timestamp);
 
 		this.updateOrbitRad();
 		this.updateCartesianPos();
@@ -128,20 +105,17 @@ testBodies = [
 ];
 
 function drawFrame(timestamp) {
-	let step = timestamp - prevTime;
+	// let step = timestamp - prevTime;
 
 	ctx.clearRect(-width / 2, -height / 2, width, height);
 	drawDot(ctx, 0, 0, 20);
 
-	// for (let i = 0; i < testBodies.length; i++) {
-	// 	testBodies[i].updateApproxFrame(ctx, step);
-	// }
 	for (let i = 0; i < testBodies.length; i++) {
 		testBodies[i].updateExactFrame(ctx, timestamp);
 	}
-	
-	prevTime = timestamp;
-	
+
+	// prevTime = timestamp;
+
 	window.requestAnimationFrame(drawFrame);
 }
 
