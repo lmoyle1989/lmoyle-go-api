@@ -4,13 +4,7 @@ const height = canvas.height;
 const width = canvas.width;
 let prevTime = 0;
 
-class OrbitalSystem {
-	constructor(satellites) {
-		this.satelliets = satellites
-	}
-}
-
-class GeometricOrbitalBody {
+class OrbitalBody {
 	constructor(size, e, h, mu, omega) {
 		this.speedFactor = 1000;
 		this.size = size // visual radius of the circle
@@ -18,30 +12,20 @@ class GeometricOrbitalBody {
 		this.h = h; // specific relative angular momentum
 		this.mu = mu; // standard gravitational parameter
 		this.omega = omega; // argument of periapsis
-		this.p = (this.h ** 2) / this.mu; // semi-latus rectum
 		this.calculateOrbitalEllipse();
-		this.period = 2 * Math.PI * Math.sqrt((this.a ** 3) / this.mu); // Kepler's law
-		this.theta = this.keplersEquation(0); // true anomaly	
-		
+		this.keplersEquation(0); // true anomaly	
 		this.updateOrbitRad();
 		this.updateCartesianPos();
 	}
 
 	calculateOrbitalEllipse() {
+		this.p = (this.h ** 2) / this.mu; // semi-latus rectum
 		this.a = this.p / (1 - (this.e ** 2)); // major axis
 		this.b = this.a * Math.sqrt((1 - (this.e ** 2))); // minor axis
 		this.majorAngle = this.omega + (Math.PI / 2)
 		this.fx = -(this.a * this.e * Math.cos(this.majorAngle)); // focus position x
 		this.fy = -(this.a * this.e * Math.sin(this.majorAngle)); // focus position y
-	}
-	
-	updateOrbitRad() {
-		this.r = this.p / (1 + this.e * Math.cos(this.theta)); // separation distance
-	}
-
-	updateCartesianPos() {
-		this.px = this.r * Math.sin(this.theta - this.omega);
-		this.py = this.r * Math.cos(this.theta - this.omega);
+		this.period = 2 * Math.PI * Math.sqrt((this.a ** 3) / this.mu); // Kepler's law
 	}
 
 	keplersEquation(timestamp) {
@@ -57,9 +41,16 @@ class GeometricOrbitalBody {
 				break;
 			}
 		}
-		const theta = 2 * Math.atan(Math.sqrt((1 + this.e) / (1 - this.e)) * Math.tan(eccentricAnomaly / 2))
+		this.theta = 2 * Math.atan(Math.sqrt((1 + this.e) / (1 - this.e)) * Math.tan(eccentricAnomaly / 2))
+	}
 
-		return theta;
+	updateOrbitRad() {
+		this.r = this.p / (1 + this.e * Math.cos(this.theta)); // separation distance
+	}
+
+	updateCartesianPos() {
+		this.px = this.r * Math.sin(this.theta - this.omega);
+		this.py = this.r * Math.cos(this.theta - this.omega);
 	}
 
 	drawOrbitalEllipse(ctx) {
@@ -75,8 +66,7 @@ class GeometricOrbitalBody {
 	}
 
 	updateFrame(ctx, timestamp) {
-		this.theta = this.keplersEquation(timestamp);
-		
+		this.keplersEquation(timestamp);
 		// for debugging the period
 		// if (last_theta % (Math.PI * 2) > this.theta % (Math.PI * 2)) {
 		// 	console.log(this.theta % (Math.PI * 2));
@@ -92,10 +82,10 @@ class GeometricOrbitalBody {
 }
 
 testBodies = [
-	new GeometricOrbitalBody(5, 0.8, 24, 10, Math.PI),
-	new GeometricOrbitalBody(5, 0.5, 12, 1, Math.PI / 2),
-	new GeometricOrbitalBody(5, 0.8, 10, 2, 3 * Math.PI / 2),
-	new GeometricOrbitalBody(5, 0.95, 10, 2, (2 * Math.PI) * 0.66)
+	new OrbitalBody(5, 0.8, 24, 10, Math.PI),
+	new OrbitalBody(5, 0.5, 12, 1, Math.PI / 2),
+	new OrbitalBody(5, 0.8, 10, 2, 3 * Math.PI / 2),
+	new OrbitalBody(5, 0.95, 10, 2, (2 * Math.PI) * 0.66)
 ];
 
 function drawFrame(timestamp) {
