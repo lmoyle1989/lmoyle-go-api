@@ -4,14 +4,20 @@ const height = canvas.height;
 const width = canvas.width;
 let prevTime = 0;
 
-class OrbitalBody {
-	constructor(size, e, h, mu, omega) {
+class Orbit {
+	constructor(e, h, mu, omega, children, parent, size) {
 		this.speedFactor = 1000;
-		this.size = size // visual radius of the circle
 		this.e = e; // eccentricity
 		this.h = h; // specific relative angular momentum
 		this.mu = mu; // standard gravitational parameter
 		this.omega = omega; // argument of periapsis
+		this.children = children
+		this.parent = parent
+		this.size = size
+
+		this.fixedPosX = 0;
+		this.fixedPosY = 0;
+
 		this.calculateOrbitalEllipse();
 		this.keplersEquation(0); // true anomaly	
 		this.updateOrbitRad();
@@ -23,8 +29,12 @@ class OrbitalBody {
 		this.a = this.p / (1 - (this.e ** 2)); // major axis
 		this.b = this.a * Math.sqrt((1 - (this.e ** 2))); // minor axis
 		this.majorAngle = this.omega + (Math.PI / 2)
-		this.fx = -(this.a * this.e * Math.cos(this.majorAngle)); // focus position x
-		this.fy = -(this.a * this.e * Math.sin(this.majorAngle)); // focus position y
+		this.fx = -(this.a * this.e * Math.cos(this.majorAngle)); // ellipse center position x
+		this.fy = -(this.a * this.e * Math.sin(this.majorAngle)); // ellipse center position y
+		if (this.parent != null) {
+			this.fx += this.parent.px
+			this.fy += this.parent.py
+		}
 		this.period = 2 * Math.PI * Math.sqrt((this.a ** 3) / this.mu); // Kepler's law
 	}
 
@@ -49,8 +59,14 @@ class OrbitalBody {
 	}
 
 	updateCartesianPos() {
-		this.px = this.r * Math.sin(this.theta - this.omega);
-		this.py = this.r * Math.cos(this.theta - this.omega);
+		if (this.parent != null) {
+			this.px = (this.r * Math.sin(this.theta - this.omega)) + this.parent.px;
+			this.py = (this.r * Math.cos(this.theta - this.omega)) + this.parent.py;
+		}
+		else {
+			this.px = this.fixedPosX
+			this.py = this.fixedPosY
+		}
 	}
 
 	drawOrbitalEllipse(ctx) {
@@ -66,33 +82,36 @@ class OrbitalBody {
 	}
 
 	updateFrame(ctx, timestamp) {
-		this.keplersEquation(timestamp);
-		// for debugging the period
-		// if (last_theta % (Math.PI * 2) > this.theta % (Math.PI * 2)) {
-		// 	console.log(this.theta % (Math.PI * 2));
-		// 	console.log(performance.now() - this.timer);
-		// 	this.timer = performance.now()
-		// }
-
-		this.updateOrbitRad();
+		if (this.parent != null) {
+			this.calculateOrbitalEllipse()
+			this.keplersEquation(timestamp);
+			this.updateOrbitRad();
+			this.drawOrbitalEllipse(ctx);
+		}
 		this.updateCartesianPos();
-		this.drawOrbitalEllipse(ctx);
 		this.drawBody(ctx);
 	}
 }
 
+theSun = new Orbit(0, 24, 10, Math.PI, [], null, 20)
+theEarth = new Orbit(0.8, 24, 10, Math.PI, [], theSun, 6)
+theMoon = new Orbit(0.2, 12, 5, Math.PI, [], theEarth, 4)
+
 testBodies = [
-	new OrbitalBody(5, 0.8, 24, 10, Math.PI),
-	new OrbitalBody(5, 0.5, 12, 1, Math.PI / 2),
-	new OrbitalBody(5, 0.8, 10, 2, 3 * Math.PI / 2),
-	new OrbitalBody(5, 0.95, 10, 2, (2 * Math.PI) * 0.66)
+	// new Orbit(0.8, 24, 10, Math.PI, [], null, 5),
+	// new Orbit(0.5, 12, 1, Math.PI / 2),
+	// new Orbit(0.8, 10, 2, 3 * Math.PI / 2),
+	// new Orbit(0.95, 10, 2, (2 * Math.PI) * 0.66)
+	theSun,
+	theEarth,
+	theMoon
 ];
 
 function drawFrame(timestamp) {
 	// let step = timestamp - prevTime;
 
 	ctx.clearRect(-width / 2, -height / 2, width, height);
-	drawDot(ctx, 0, 0, 20);
+	// drawDot(ctx, 0, 0, 20); center dot?
 
 	for (let i = 0; i < testBodies.length; i++) {
 		testBodies[i].updateFrame(ctx, timestamp);
